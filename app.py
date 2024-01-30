@@ -39,6 +39,7 @@ def create_user():
     # for now data input is in json via postman, get_json makes the data a dictionary to easier parsing
     data = request.get_json() 
     user_name = data["name"]
+    
     with connection: 
         # a cursor allows us to insert or retrieve data from the db
         with connection.cursor() as cursor:
@@ -57,6 +58,7 @@ def create_user():
             # retrieve the id, fetchone() returns only one row, but this works because we only added one row
             # [0] to avoid tuple 
             user_id = cursor.fetchone()[0]
+            
     return {"id": user_id, "message": f"User: '{user_name}' created"}, 201
 
 @app.post("/api/delete-user")
@@ -76,5 +78,5 @@ def delete_user():
             user_id = existing_user_id[0]
             cursor.execute(DELETE_USER, (user_id,))
     
-    return {"message", f"User: '{user_name} deleted successfully"}, 200
+    return {"message": f"User: '{user_name} deleted successfully"}, 200
             
