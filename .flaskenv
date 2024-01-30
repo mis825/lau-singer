@@ -1,5 +1,2 @@
-# Linking the flask application to app.py
-FLASK_APP=app 
-
-# Debug Mode 
+FLASK_APP=app.py
 FLASK_DEBUG=True

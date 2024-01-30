@@ -17,6 +17,11 @@ CHECK_IF_USER_EXISTS = (
     "SELECT id FROM users WHERE name = %s;"
 )
 
+# delete the user if it exists via its row id
+DELETE_USER = (
+    "DELETE FROM users WHERE id = %s;"
+)
+
 # read in environment variables in .env 
 load_dotenv()
 
@@ -24,7 +29,6 @@ app = Flask(__name__)
 url = os.getenv("DATABASE_URL")
 # connect to the postgres db 
 connection = psycopg2.connect(url)
-
 
 @app.get("/")
 def home(): 
@@ -53,6 +57,24 @@ def create_user():
             # retrieve the id, fetchone() returns only one row, but this works because we only added one row
             # [0] to avoid tuple 
             user_id = cursor.fetchone()[0]
-    return {"id": user_id, "message": f"User: {user_name} created"}, 201
+    return {"id": user_id, "message": f"User: '{user_name}' created"}, 201
 
-
+@app.post("/api/delete-user")
+def delete_user():
+    data = request.get_json()
+    user_name = data["name"]
+    
+    with connection: 
+        with connection.cursor() as cursor: 
+            # check if the user exists
+            cursor.execute(CHECK_IF_USER_EXISTS, (user_name,))
+            existing_user_id = cursor.fetchone()
+            
+            if not existing_user_id:
+                return {"message": f"User: '{user_name} not found"}, 404
+            
+            user_id = existing_user_id[0]
+            cursor.execute(DELETE_USER, (user_id,))
+    
+    return {"message", f"User: '{user_name} deleted successfully"}, 200
+            
