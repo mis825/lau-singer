@@ -61,7 +61,7 @@ def create_user():
             
     return {"id": user_id, "message": f"User: '{user_name}' created"}, 201
 
-@app.post("/api/delete-user")
+@app.delete("/api/delete-user")
 def delete_user():
     data = request.get_json()
     user_name = data["name"]
