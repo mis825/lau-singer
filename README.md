@@ -55,7 +55,9 @@ To set up the project environment, follow these steps:
     # Access environment variables using os.getenv("VARIABLE_NAME")
 
 ## Usage
-To do
+1. Run the application in the root directory via this terminal command
+    ```bash
+    flask run 
 
 ## Contributing
 To do
