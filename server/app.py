@@ -40,7 +40,7 @@ def handle_message(message):
 
 @app.route("/")
 def index(): 
-    return render_template("index.html")
+    return render_template("index.html") 
 
 @app.post("/api/create-user")
 def create_user(): 
@@ -81,13 +81,13 @@ def delete_user():
             existing_user_id = cursor.fetchone()
             
             if not existing_user_id:
-                return {"message": f"User: '{user_name} not found"}, 404
+                return {"message": f"User: '{user_name}' not found"}, 404
             
             user_id = existing_user_id[0]
             cursor.execute(DELETE_USER, (user_id,))
     
-    return {"message": f"User: '{user_name} deleted successfully"}, 200
+    return {"message": f"User: '{user_name}' deleted successfully"}, 200
 
 if __name__ == "__main__":
-    socketio.run(app, host="128.180.208.215")
+    socketio.run(app, host="128.180.235.203")
             
