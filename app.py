@@ -1,7 +1,8 @@
 import os 
 import psycopg2
 from dotenv import load_dotenv
-from flask import Flask, request
+from flask import Flask, request, render_template
+from flask_socketio import SocketIO, send
 
 CREATE_USERS_TABLE = (
     "CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT);"
@@ -22,17 +23,24 @@ DELETE_USER = (
     "DELETE FROM users WHERE id = %s;"
 )
 
-# read in environment variables in .env 
 load_dotenv()
 
 app = Flask(__name__)
+app.config['SECRET'] = "secret123"
+socketio = SocketIO(app, cors_allowed_origins="*")
 url = os.getenv("DATABASE_URL")
-# connect to the postgres db 
 connection = psycopg2.connect(url)
 
-@app.get("/")
-def home(): 
-    return "Home Page"
+@socketio.on('message')
+def handle_message(message):
+    print("Received message: " + message)
+    if message != "User connected!":
+        send(message, broadcast=True)
+        
+
+@app.route("/")
+def index(): 
+    return render_template("index.html")
 
 @app.post("/api/create-user")
 def create_user(): 
@@ -79,4 +87,7 @@ def delete_user():
             cursor.execute(DELETE_USER, (user_id,))
     
     return {"message": f"User: '{user_name} deleted successfully"}, 200
+
+if __name__ == "__main__":
+    socketio.run(app, host="128.180.208.215")
             
