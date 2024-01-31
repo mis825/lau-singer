@@ -14,6 +14,7 @@ To set up the project environment, follow these steps:
 
    ```bash
    cd lau-singer
+   cd server
    python -m venv venv
 3. Activate the virtual environment. 
 
