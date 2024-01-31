@@ -39,13 +39,13 @@ logger = logging.getLogger()
 
 @socketio.on('message')
 def handle_message(message):
-    print("Received message: " + message)
+    logger.info("Received message: " + message)
     if message != "User connected!":
         send(message, broadcast=True)
-        
 
 @app.route("/")
 def index(): 
+    logger.info("Accessed index page.")
     return render_template("index.html") 
 
 @app.post("/api/create-user")
