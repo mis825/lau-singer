@@ -1,0 +1,23 @@
+.App {
+  text-align: center;
+  font-family: Inter, sans-serif;
+  font-feature-settings: 'liga' 1, 'calt' 1; /* fix for Chrome */
+}
+
+body {
+  margin: 0;
+  background-color: #282c34;
+}
+
+@supports (font-variation-settings: normal) {
+  .App { font-family: InterVariable, sans-serif; }
+}
+
+.App-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
