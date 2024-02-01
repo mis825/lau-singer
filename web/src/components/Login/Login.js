@@ -14,7 +14,30 @@ function Login() {
       setNameError("Please enter a name");
       return;
     }
+
+    logIn()
+
   };
+
+  const logIn = () => {
+    const data = {
+      name: name,
+    };
+
+    fetch("http://localhost:5000/api/create-user", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }).then((response) => {
+      if (response.ok) {
+        window.alert("Welcome to Battle Draw " + name + "!");
+      } else {
+        setNameError("Name already taken");
+      }
+    });
+  }
 
   return (
     <div className="Login">
