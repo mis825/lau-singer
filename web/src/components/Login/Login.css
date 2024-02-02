@@ -47,9 +47,3 @@ input[type="button"] {
     border-radius: 8px;
     cursor: pointer;
 }
-
-.errorLabel {
-    color: rgb(255, 107, 107);
-    font-size: 18px;
-    display: block;
-}

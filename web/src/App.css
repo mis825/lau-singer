@@ -21,3 +21,9 @@ body {
   font-size: calc(10px + 2vmin);
   color: white;
 }
+
+.errorLabel {
+  color: rgb(255, 107, 107);
+  font-size: 18px;
+  display: block;
+}

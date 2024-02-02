@@ -1,11 +1,14 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 import "./Login.css";
 
-function Login() {
+function Login(props) {
   const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
+
+  const navigate = useNavigate();
 
   const onButtonClick = () => {
     setNameError("");
@@ -32,7 +35,9 @@ function Login() {
       body: JSON.stringify(data),
     }).then((response) => {
       if (response.ok) {
-        window.alert("Welcome to Battle Draw " + name + "!");
+        props.setLoggedIn(true);
+        props.setName(name);
+        navigate("/rooms")
       } else {
         setNameError("Name already taken");
       }
