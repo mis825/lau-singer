@@ -2,7 +2,23 @@
 
 This is a project created by Andy Lau and Michael Singer for CSE 298 @ Lehigh University. The web app allows users to create and join rooms where they compete and draw to decide the ultimate winner for the best guesser or best drawer.  
 
-## Installation
+## Installation (Web)
+
+To set up the web environment, follow these steps:
+
+1. Download latest version of [Node 18](https://nodejs.org/en/blog/release/v18.12.0)
+
+2. Download dependencies
+
+   ```bash
+   npm install
+
+3. Run locally
+
+   ```bash
+   npm start
+
+## Installation (Server)
 
 To set up the project environment, follow these steps:
 

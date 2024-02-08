@@ -3,6 +3,7 @@ import psycopg2
 from dotenv import load_dotenv
 from flask import Flask, request, render_template
 from flask_socketio import SocketIO, send
+from flask_cors import CORS
 
 CREATE_USERS_TABLE = (
     "CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, name TEXT);"
@@ -30,6 +31,7 @@ app.config['SECRET'] = "secret123"
 socketio = SocketIO(app, cors_allowed_origins="*")
 url = os.getenv("DATABASE_URL")
 connection = psycopg2.connect(url)
+CORS(app)
 
 @socketio.on('message')
 def handle_message(message):
@@ -89,5 +91,5 @@ def delete_user():
     return {"message": f"User: '{user_name}' deleted successfully"}, 200
 
 if __name__ == "__main__":
-    socketio.run(app, host="128.180.235.203")
+    socketio.run(app, host="localhost", port=5000)
             
