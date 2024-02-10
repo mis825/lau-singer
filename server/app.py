@@ -49,10 +49,10 @@ def api_delete_user():
 
 @app.get("/api/get-user")
 def api_get_user():
-    data = request.get_json()
-    if not data or 'name' not in data:
+    name = request.args.get('name')
+    if not name:
         return jsonify({"message": "User name not provided"}), 400
-    response, status = get_user(data['name'])
+    response, status = get_user(name)
     return jsonify(response), status
 
 @app.post("/api/create-room")
