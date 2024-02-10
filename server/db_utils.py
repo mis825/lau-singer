@@ -106,7 +106,7 @@ def delete_user_id(id):
                 return {"message": "User not found"}, 404
 
 
-def get_user(name):
+def get_user_by_name(name):
     """Retrieve a user by name."""
     with psycopg2.connect(url) as conn:
         with conn.cursor() as cursor:
@@ -117,6 +117,20 @@ def get_user(name):
                 return {"id": user_id[0], "message": f"User '{name}' found"}, 200
             else:
                 logger.warning(f"User '{name}' not found")
+                return {"message": "User not found"}, 404
+
+
+def get_user_by_id(id):
+    """Retrieve a user by id."""
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(CHECK_IF_USER_ID_EXISTS, (id,))
+            user_id = cursor.fetchone()
+            if user_id:
+                logger.info(f"User with id: '{id}' found.")
+                return {"id": user_id[0], "message": f"User with id: '{id}' found"}, 200
+            else:
+                logger.warning(f"User with id: '{id}' not found")
                 return {"message": "User not found"}, 404
 
 
