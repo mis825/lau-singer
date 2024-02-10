@@ -4,7 +4,7 @@ from flask import Flask, request, render_template, jsonify
 from flask_socketio import SocketIO, send
 from flask_cors import CORS
 from dotenv import load_dotenv
-from db_utils import initialize_db, create_user, delete_user_name, get_user,  generate_unique_room_id, create_room, delete_room, join_room, leave_room
+from db_utils import initialize_db, create_user, delete_user_name, get_user_by_id, get_user_by_name, generate_unique_room_id, create_room, delete_room, join_room, leave_room
 
 load_dotenv()
 app = Flask(__name__)
@@ -54,9 +54,9 @@ def api_get_user():
     if not id and not name:
         return jsonify({"message": "User ID or name not provided"}), 400
     if id:
-        response, status = get_user(id=id)
+        response, status = get_user_by_id(id=id)
     else:
-        response, status = get_user(name)
+        response, status = get_user_by_name(name=name)
     return jsonify(response), status
 
 @app.post("/api/create-room")
