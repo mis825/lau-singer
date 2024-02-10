@@ -127,7 +127,8 @@ def get_user_by_id(id):
             cursor.execute(CHECK_IF_USER_ID_EXISTS, (id,))
             user_id = cursor.fetchone()
             if user_id:
-                name = cursor.execute("SELECT name FROM users WHERE id = %s;", (id,))
+                cursor.execute("SELECT name FROM users WHERE id = %s;", (id,))
+                name = cursor.fetchone()[0]
                 logger.info(f"User '{name}' found with ID: {user_id[0]}.")
                 return {"id": user_id[0], "message": f"User '{name}' found"}, 200
             else:
