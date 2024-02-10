@@ -4,7 +4,7 @@ from flask import Flask, request, render_template, jsonify
 from flask_socketio import SocketIO, send
 from flask_cors import CORS
 from dotenv import load_dotenv
-from db_utils import initialize_db, create_user, delete_user_name, get_user,  generate_unique_room_id, create_room, join_room, leave_room
+from db_utils import initialize_db, create_user, delete_user_name, get_user,  generate_unique_room_id, create_room, delete_room, join_room, leave_room
 
 load_dotenv()
 app = Flask(__name__)
@@ -49,10 +49,10 @@ def api_delete_user():
 
 @app.get("/api/get-user")
 def api_get_user():
-    data = request.get_json()
-    if not data or 'name' not in data:
+    name = request.args.get('name')
+    if not name:
         return jsonify({"message": "User name not provided"}), 400
-    response, status = get_user(data['name'])
+    response, status = get_user(name)
     return jsonify(response), status
 
 @app.post("/api/create-room")
@@ -62,6 +62,14 @@ def api_create_room():
     room_name = request.json.get('name', room_id)  
     max_users = request.json.get('max_users', 8)  
     response, status = create_room(room_id, room_name, max_users)
+    return jsonify(response), status
+
+@app.delete("/api/delete-room")
+def api_delete_room():
+    room_id = request.json.get('room_id')
+    if not room_id:
+        return jsonify({"message": "Room ID is required"}), 400
+    response, status = delete_room(room_id)
     return jsonify(response), status
 
 @app.post("/api/join-room")

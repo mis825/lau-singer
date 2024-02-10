@@ -184,9 +184,27 @@ def create_room(name, max_users):
     with psycopg2.connect(url) as conn:
         with conn.cursor() as cursor:
             cursor.execute("INSERT INTO rooms (id, name, max_users) VALUES (%s, %s, %s);", (room_id, name, max_users))
-            conn.commit()  # Ensure data consistency and durability
+            conn.commit()  # ensure data consistency and durability
     logger.info(f"Room '{name}' created with ID: {room_id}.")
     return {"id": room_id, "name": name, "max_users": max_users}, 201
+
+
+def delete_room(room_id):
+    """Deletes a room with the given room_id if it exists."""
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT id FROM rooms WHERE id = %s;", (room_id,))
+            # in the future, we can delete messages and users that are related to the room
+            room_exists = cursor.fetchone() is not None
+            if room_exists:
+                cursor.execute("DELETE FROM rooms WHERE id = %s;", (room_id,))
+                conn.commit() 
+                logger.info(f"Room with ID: {room_id} deleted.")
+                return {"message": f"Room with ID: {room_id} deleted successfully."}, 200
+            else:
+                logger.warning(f"Room with ID: {room_id} does not exist.")
+                return {"message": f"Room with ID: {room_id} does not exist."}, 404
+
 
 
 def join_room(user_id, room_id):
