@@ -176,3 +176,14 @@ def room_id_exists(room_id):
             cursor.execute("SELECT id FROM rooms WHERE id = %s;", (room_id,))
             # return true if the room exists, false otherwise 
             return cursor.fetchone() is not None
+        
+        
+def create_room(name, max_users):
+    """Creates a new room with the given name and maximum user limit."""
+    room_id = generate_unique_room_id() 
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("INSERT INTO rooms (id, name, max_users) VALUES (%s, %s, %s);", (room_id, name, max_users))
+            conn.commit()  # Ensure data consistency and durability
+    logger.info(f"Room '{name}' created with ID: {room_id}.")
+    return {"id": room_id, "name": name, "max_users": max_users}, 201
