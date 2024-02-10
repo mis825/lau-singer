@@ -1,6 +1,6 @@
 import os 
 import logging 
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, send
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -23,12 +23,6 @@ def handle_message(message):
     logger.info("Received message: " + message)
     if message != "User connected!":
         send(message, broadcast=True)
-
-@app.route("/")
-def index(): 
-    # landing page for now? 
-    logger.info("Accessed index page.")
-    return render_template("index.html") 
 
 @app.post("/api/create-user")
 def api_create_user():
