@@ -4,7 +4,7 @@ from flask import Flask, request, render_template, jsonify
 from flask_socketio import SocketIO, send
 from flask_cors import CORS
 from dotenv import load_dotenv
-from db_utils import create_user, delete_user_name, get_user
+from db_utils import create_user, delete_user_name, get_user, initialize_db, create_room 
 
 load_dotenv()
 app = Flask(__name__)

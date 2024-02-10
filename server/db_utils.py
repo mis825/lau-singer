@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 """
 
+
 def initialize_db():
     with psycopg2.connect(url) as conn:
         with conn.cursor() as cursor:
@@ -57,6 +58,7 @@ def initialize_db():
             cursor.execute(CREATE_ROOM_USERS_TABLE)
             cursor.execute(CREATE_MESSAGES_TABLE)
     logger.info("Database initialized with user and room functionality.")
+
 
 def create_user(name):
     """Create a new user with the given name."""
@@ -73,6 +75,7 @@ def create_user(name):
             logger.info(f"User '{name}' created with ID: {user_id}.")
             return {"id": user_id, "message": f"User: '{name}' created"}, 201
 
+
 def delete_user_name(name):
     """Delete a user by name."""
     with psycopg2.connect(url) as conn:
@@ -87,6 +90,7 @@ def delete_user_name(name):
                 logger.warning(f"User '{name}' not found")
                 return {"message": "User not found"}, 404
 
+
 def delete_user_id(id):
     """Delete a user by name."""
     with psycopg2.connect(url) as conn:
@@ -100,6 +104,7 @@ def delete_user_id(id):
             else:
                 logger.warning(f"User with id: '{id}' not found")
                 return {"message": "User not found"}, 404
+
 
 def get_user(name):
     """Retrieve a user by name."""
@@ -154,3 +159,20 @@ def print_table_contents(table_name):
             except psycopg2.Error as e:
                 logger.error(f"Error accessing table '{table_name}': {e}")
                 return {"message": f"Error accessing table '{table_name}': {e}", "code": 500}
+
+
+def generate_unique_room_id():
+    """Generates a unique 6-digit room ID."""
+    while True:
+        room_id = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        if not room_id_exists(room_id):
+            return room_id
+
+
+def room_id_exists(room_id):
+    """Check if a room exists based on the given id."""
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT id FROM rooms WHERE id = %s;", (room_id,))
+            # return true if the room exists, false otherwise 
+            return cursor.fetchone() is not None
