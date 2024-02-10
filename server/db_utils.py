@@ -114,7 +114,7 @@ def get_user_by_name(name):
             user_id = cursor.fetchone()
             if user_id:
                 logger.info(f"User '{name}' found with ID: {user_id[0]}.")
-                return {"id": user_id[0], "message": f"User '{name}' found"}, 200
+                return {"id": user_id[0], "name": name}, 200
             else:
                 logger.warning(f"User '{name}' not found")
                 return {"message": "User not found"}, 404
@@ -130,7 +130,7 @@ def get_user_by_id(id):
                 cursor.execute("SELECT name FROM users WHERE id = %s;", (id,))
                 name = cursor.fetchone()[0]
                 logger.info(f"User '{name}' found with ID: {user_id[0]}.")
-                return {"id": user_id[0], "message": f"User '{name}' found"}, 200
+                return {"id": user_id[0], "name": name}, 200
             else:
                 logger.warning(f"User with id: '{id}' not found")
                 return {"message": "User not found"}, 404
