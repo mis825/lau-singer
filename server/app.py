@@ -54,9 +54,9 @@ def api_get_user():
     if not id and not name:
         return jsonify({"message": "User ID or name not provided"}), 400
     if id:
-        response, status = get_user(id=id)
+        response, status = get_user_by_id(id=id)
     else:
-        response, status = get_user(name)
+        response, status = get_user_by_name(name)
     return jsonify(response), status
 
 @app.post("/api/create-room")
