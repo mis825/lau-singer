@@ -4,7 +4,7 @@ from flask import Flask, request, render_template, jsonify
 from flask_socketio import SocketIO, send
 from flask_cors import CORS
 from dotenv import load_dotenv
-from db_utils import create_user, delete_user_name, get_user, initialize_db, create_room, generate_unique_room_id
+from db_utils import initialize_db, create_user, delete_user_name, get_user,  generate_unique_room_id, create_room, join_room 
 
 load_dotenv()
 app = Flask(__name__)
@@ -64,6 +64,14 @@ def api_create_room():
     response, status = create_room(room_id, room_name, max_users)
     return jsonify(response), status
 
+@app.post("/api/join-room")
+def api_join_room():
+    user_id = request.json.get('user_id')
+    room_id = request.json.get('room_id')
+    if not user_id or not room_id:
+        return jsonify({"message": "Missing user_id or room_id"}), 400
+    response, status = join_room(user_id, room_id)
+    return jsonify(response), status
 
 if __name__ == "__main__":
     socketio.run(app, host="localhost", debug=True)
