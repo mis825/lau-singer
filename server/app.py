@@ -6,15 +6,11 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from db_utils import create_user, delete_user_name, get_user
 
-import psycopg2
-
 load_dotenv()
 app = Flask(__name__)
 app.config['SECRET'] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app, cors_allowed_origins="*")
 CORS(app)
-# url = os.getenv("DATABASE_URL")
-# connection = psycopg2.connect(url)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 # logger.setLevel(logging.DEBUG)
