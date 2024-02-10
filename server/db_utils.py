@@ -49,6 +49,15 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 """
 
+def initialize_db():
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(CREATE_USERS_TABLE)
+            cursor.execute(CREATE_ROOMS_TABLE)
+            cursor.execute(CREATE_ROOM_USERS_TABLE)
+            cursor.execute(CREATE_MESSAGES_TABLE)
+    logger.info("Database initialized with user and room functionality.")
+
 def create_user(name):
     """Create a new user with the given name."""
     with psycopg2.connect(url) as conn:
