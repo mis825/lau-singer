@@ -187,3 +187,25 @@ def create_room(name, max_users):
             conn.commit()  # Ensure data consistency and durability
     logger.info(f"Room '{name}' created with ID: {room_id}.")
     return {"id": room_id, "name": name, "max_users": max_users}, 201
+
+
+def join_room(user_id, room_id):
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            # check if the room exists
+            cursor.execute("SELECT max_users FROM rooms WHERE id = %s;", (room_id,))
+            room = cursor.fetchone()
+            if not room:
+                return {"message": "Room does not exist"}, 404
+            
+            # check if the room is full
+            cursor.execute("SELECT COUNT(user_id) FROM room_users WHERE room_id = %s;", (room_id,))
+            user_count = cursor.fetchone()[0]
+            if user_count >= room[0]: 
+                return {"message": "Room is full"}, 400
+            
+            # if everything is good
+            cursor.execute("INSERT INTO room_users (room_id, user_id) VALUES (%s, %s);", (room_id, user_id))
+            conn.commit()
+            return {"message": f"User with id: {user_id} added to room: {room_id} successfully"}, 200
+
