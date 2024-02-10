@@ -56,7 +56,7 @@ def api_get_user():
     if id:
         response, status = get_user_by_id(id=id)
     else:
-        response, status = get_user_by_name(name)
+        response, status = get_user_by_name(name=name)
     return jsonify(response), status
 
 @app.post("/api/create-room")
