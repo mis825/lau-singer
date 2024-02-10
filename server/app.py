@@ -58,8 +58,9 @@ def api_get_user():
 @app.post("/api/create-room")
 def api_create_room():
     room_id = generate_unique_room_id()
-    room_name = request.json.get('name', 'Default Room Name')  # Example: Use a default name or take it from request
-    max_users = request.json.get('max_users', 10)  # Example: Default max users to 10
+    # default room name, max_users = room_id, 8 
+    room_name = request.json.get('name', room_id)  
+    max_users = request.json.get('max_users', 8)  
     response, status = create_room(room_id, room_name, max_users)
     return jsonify(response), status
 
