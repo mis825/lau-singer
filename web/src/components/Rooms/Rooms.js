@@ -24,7 +24,7 @@ function Rooms(props) {
                 <h1>Battle Rooms</h1>
             </header>
             <ul className="roomList">
-                <li>Room 1: 0/10 players</li>
+                <li><a href="/draw">Room 1: 0/10 players</a></li>
                 <li>Room 2: 0/10 players</li>
                 <li>Room 3: 0/10 players</li>
                 <li>Room 4: 0/10 players</li>

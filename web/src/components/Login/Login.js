@@ -37,7 +37,7 @@ function Login(props) {
       if (response.ok) {
         props.setLoggedIn(true);
         props.setName(name);
-        navigate("/rooms")
+        navigate("/draw")
       } else {
         setNameError("Name already taken");
       }
