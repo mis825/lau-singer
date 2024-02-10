@@ -1,4 +1,5 @@
 import os
+import random
 import logging
 import psycopg2
 from dotenv import load_dotenv
@@ -19,6 +20,34 @@ CHECK_IF_USER_ID_EXISTS = "SELECT id FROM users Where id = %s;"
 DELETE_USER = "DELETE FROM users WHERE id = %s;"
 LIST_TABLES = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
 
+# SQL Room Related Queries
+CREATE_ROOMS_TABLE = """
+CREATE TABLE IF NOT EXISTS rooms (
+    id VARCHAR(6) PRIMARY KEY,
+    name TEXT NOT NULL,
+    max_users INT,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc')
+);
+"""
+
+CREATE_ROOM_USERS_TABLE = """
+CREATE TABLE IF NOT EXISTS room_users (
+    room_id VARCHAR(6) REFERENCES rooms(id),
+    user_id INT REFERENCES users(id),
+    joined_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc'),
+    PRIMARY KEY (room_id, user_id)
+);
+"""
+
+CREATE_MESSAGES_TABLE = """
+CREATE TABLE IF NOT EXISTS messages (
+    id SERIAL PRIMARY KEY,
+    room_id VARCHAR(6) REFERENCES rooms(id),
+    user_id INT REFERENCES users(id),
+    message_text TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc')
+);
+"""
 
 def create_user(name):
     """Create a new user with the given name."""
