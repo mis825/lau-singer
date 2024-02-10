@@ -15,8 +15,8 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Test />} />
-          {/* <Route path="/" element={<Login setLoggedIn={setLoggedIn} setName={setName} />} /> */}
+          {/* <Route path="/" element={<Test />} /> */}
+          <Route path="/" element={<Login setLoggedIn={setLoggedIn} setName={setName} />} />
           <Route path="/rooms" element={<Rooms loggedIn={loggedIn} name={name} />} />
         </Routes>
       </BrowserRouter>
