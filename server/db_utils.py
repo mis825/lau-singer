@@ -1,4 +1,5 @@
 import os
+import random
 import logging
 import psycopg2
 from dotenv import load_dotenv
@@ -19,6 +20,45 @@ CHECK_IF_USER_ID_EXISTS = "SELECT id FROM users Where id = %s;"
 DELETE_USER = "DELETE FROM users WHERE id = %s;"
 LIST_TABLES = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';"
 
+# SQL Room Related Queries
+CREATE_ROOMS_TABLE = """
+CREATE TABLE IF NOT EXISTS rooms (
+    id VARCHAR(6) PRIMARY KEY,
+    name TEXT NOT NULL,
+    max_users INT,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc')
+);
+"""
+
+CREATE_ROOM_USERS_TABLE = """
+CREATE TABLE IF NOT EXISTS room_users (
+    room_id VARCHAR(6) REFERENCES rooms(id),
+    user_id INT REFERENCES users(id),
+    joined_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc'),
+    PRIMARY KEY (room_id, user_id)
+);
+"""
+
+CREATE_MESSAGES_TABLE = """
+CREATE TABLE IF NOT EXISTS messages (
+    id SERIAL PRIMARY KEY,
+    room_id VARCHAR(6) REFERENCES rooms(id),
+    user_id INT REFERENCES users(id),
+    message_text TEXT NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT (NOW() AT TIME ZONE 'utc')
+);
+"""
+
+
+def initialize_db():
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(CREATE_USERS_TABLE)
+            cursor.execute(CREATE_ROOMS_TABLE)
+            cursor.execute(CREATE_ROOM_USERS_TABLE)
+            cursor.execute(CREATE_MESSAGES_TABLE)
+    logger.info("Database initialized with user and room functionality.")
+
 
 def create_user(name):
     """Create a new user with the given name."""
@@ -35,6 +75,7 @@ def create_user(name):
             logger.info(f"User '{name}' created with ID: {user_id}.")
             return {"id": user_id, "message": f"User: '{name}' created"}, 201
 
+
 def delete_user_name(name):
     """Delete a user by name."""
     with psycopg2.connect(url) as conn:
@@ -48,6 +89,7 @@ def delete_user_name(name):
             else:
                 logger.warning(f"User '{name}' not found")
                 return {"message": "User not found"}, 404
+
 
 def delete_user_id(id):
     """Delete a user by name."""
@@ -63,7 +105,8 @@ def delete_user_id(id):
                 logger.warning(f"User with id: '{id}' not found")
                 return {"message": "User not found"}, 404
 
-def get_user(name):
+
+def get_user_by_name(name):
     """Retrieve a user by name."""
     with psycopg2.connect(url) as conn:
         with conn.cursor() as cursor:
@@ -71,9 +114,25 @@ def get_user(name):
             user_id = cursor.fetchone()
             if user_id:
                 logger.info(f"User '{name}' found with ID: {user_id[0]}.")
-                return {"id": user_id[0], "message": f"User '{name}' found"}, 200
+                return {"id": user_id[0], "name": name}, 200
             else:
                 logger.warning(f"User '{name}' not found")
+                return {"message": "User not found"}, 404
+
+
+def get_user_by_id(id):
+    """Retrieve a user by id."""
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(CHECK_IF_USER_ID_EXISTS, (id,))
+            user_id = cursor.fetchone()
+            if user_id:
+                cursor.execute("SELECT name FROM users WHERE id = %s;", (id,))
+                name = cursor.fetchone()[0]
+                logger.info(f"User '{name}' found with ID: {user_id[0]}.")
+                return {"id": user_id[0], "name": name}, 200
+            else:
+                logger.warning(f"User with id: '{id}' not found")
                 return {"message": "User not found"}, 404
 
 
@@ -116,3 +175,85 @@ def print_table_contents(table_name):
             except psycopg2.Error as e:
                 logger.error(f"Error accessing table '{table_name}': {e}")
                 return {"message": f"Error accessing table '{table_name}': {e}", "code": 500}
+
+
+def generate_unique_room_id():
+    """Generates a unique 6-digit room ID."""
+    while True:
+        room_id = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        if not room_id_exists(room_id):
+            return room_id
+
+
+def room_id_exists(room_id):
+    """Check if a room exists based on the given id."""
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT id FROM rooms WHERE id = %s;", (room_id,))
+            # return true if the room exists, false otherwise 
+            return cursor.fetchone() is not None
+        
+        
+def create_room(name, max_users):
+    """Creates a new room with the given name and maximum user limit."""
+    room_id = generate_unique_room_id() 
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("INSERT INTO rooms (id, name, max_users) VALUES (%s, %s, %s);", (room_id, name, max_users))
+            conn.commit()  # ensure data consistency and durability
+    logger.info(f"Room '{name}' created with ID: {room_id}.")
+    return {"id": room_id, "name": name, "max_users": max_users}, 201
+
+
+def delete_room(room_id):
+    """Deletes a room with the given room_id if it exists."""
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT id FROM rooms WHERE id = %s;", (room_id,))
+            # in the future, we can delete messages and users that are related to the room
+            room_exists = cursor.fetchone() is not None
+            if room_exists:
+                cursor.execute("DELETE FROM rooms WHERE id = %s;", (room_id,))
+                conn.commit() 
+                logger.info(f"Room with ID: {room_id} deleted.")
+                return {"message": f"Room with ID: {room_id} deleted successfully."}, 200
+            else:
+                logger.warning(f"Room with ID: {room_id} does not exist.")
+                return {"message": f"Room with ID: {room_id} does not exist."}, 404
+
+
+
+def join_room(user_id, room_id):
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            # check if the room exists
+            cursor.execute("SELECT max_users FROM rooms WHERE id = %s;", (room_id,))
+            room = cursor.fetchone()
+            if not room:
+                return {"message": f"Room {room_id} does not exist"}, 404
+            
+            # check if the room is full
+            cursor.execute("SELECT COUNT(user_id) FROM room_users WHERE room_id = %s;", (room_id,))
+            user_count = cursor.fetchone()[0]
+            if user_count >= room[0]: 
+                return {"message": f"Room {room_id} is full"}, 400
+            
+            # if everything is good
+            cursor.execute("INSERT INTO room_users (room_id, user_id) VALUES (%s, %s);", (room_id, user_id))
+            conn.commit()
+            return {"message": f"User with id: {user_id} added to room: {room_id} successfully"}, 200
+
+
+def leave_room(user_id, room_id):
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            # check if the user is actually in the room
+            cursor.execute("SELECT 1 FROM room_users WHERE room_id = %s AND user_id = %s;", (room_id, user_id))
+            if cursor.fetchone() is None:
+                return {"message": f"User {user_id} is not in the room"}, 404
+            
+            # remove the user from the room
+            cursor.execute("DELETE FROM room_users WHERE room_id = %s AND user_id = %s;", (room_id, user_id))
+            conn.commit()
+            return {"message": f"User {user_id} removed from room {room_id} successfully"}, 200
+
