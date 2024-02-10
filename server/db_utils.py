@@ -196,16 +196,30 @@ def join_room(user_id, room_id):
             cursor.execute("SELECT max_users FROM rooms WHERE id = %s;", (room_id,))
             room = cursor.fetchone()
             if not room:
-                return {"message": "Room does not exist"}, 404
+                return {"message": f"Room {room_id} does not exist"}, 404
             
             # check if the room is full
             cursor.execute("SELECT COUNT(user_id) FROM room_users WHERE room_id = %s;", (room_id,))
             user_count = cursor.fetchone()[0]
             if user_count >= room[0]: 
-                return {"message": "Room is full"}, 400
+                return {"message": f"Room {room_id} is full"}, 400
             
             # if everything is good
             cursor.execute("INSERT INTO room_users (room_id, user_id) VALUES (%s, %s);", (room_id, user_id))
             conn.commit()
             return {"message": f"User with id: {user_id} added to room: {room_id} successfully"}, 200
+
+
+def leave_room(user_id, room_id):
+    with psycopg2.connect(url) as conn:
+        with conn.cursor() as cursor:
+            # check if the user is actually in the room
+            cursor.execute("SELECT 1 FROM room_users WHERE room_id = %s AND user_id = %s;", (room_id, user_id))
+            if cursor.fetchone() is None:
+                return {"message": f"User {user_id} is not in the room"}, 404
+            
+            # remove the user from the room
+            cursor.execute("DELETE FROM room_users WHERE room_id = %s AND user_id = %s;", (room_id, user_id))
+            conn.commit()
+            return {"message": f"User {user_id} removed from room {room_id} successfully"}, 200
 
