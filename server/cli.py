@@ -1,5 +1,5 @@
 import argparse
-from db_utils import create_user, delete_user_name, delete_user_id, get_user, list_tables, print_table_contents
+from db_utils import create_user, delete_user_name, delete_user_id, get_user_by_name, get_user_by_id, list_tables, print_table_contents
 
 def main(): 
     parser = argparse.ArgumentParser(description="CLI for user management")
@@ -20,9 +20,12 @@ def main():
     elif args.action == 'delete_user_id':
         id = input("Enter user id to delete: ")
         delete_user_id(id)
-    elif args.action == 'get_user':
+    elif args.action == 'get_user_name':
         name = input("Enter user name to get: ")
-        get_user(name)
+        get_user_by_name(name)
+    elif args.action == 'get_user_id':
+        id = input("Enter user id to get: ")
+        get_user_by_id(id)
 
 if __name__ == "__main__":
     main()
