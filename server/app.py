@@ -30,7 +30,7 @@ def on_join(data):
     username = data['username']
     room = data['room']
     join_room(room)
-    send(username + f' has entered the room.', to=room)
+    emit('message', {'msg': f"{username} has entered the room.", 'username': 'System'}, to=room)
     
 # SocketIO event for leaving a room
 @socketio.on('leave')
@@ -38,7 +38,7 @@ def on_leave(data):
     username = data['username']
     room = data['room']
     leave_room(room)
-    send(username + ' has left the room.', to=room)
+    emit('message', {'msg': f"{username} has left the room.", 'username': 'System'}, to=room)
     
 # SocketIO event for sending a message to a room
 @socketio.on('message')
@@ -50,7 +50,7 @@ def handle_message(data):
     logger.info(f"Message received in room {room} from {username}: {message}")
     
     # emit the message with the username: message
-    emit('message', {'msg': message}, to=room)
+    emit('message', {'msg': message, 'username': username}, to=room)
 
 @app.post("/api/create-user")
 def api_create_user():

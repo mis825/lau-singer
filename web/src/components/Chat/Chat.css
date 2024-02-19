@@ -1,0 +1,53 @@
+@supports (font-variation-settings: normal) {
+    .chat-container {
+        font-family: InterVariable, sans-serif;
+    }
+}
+
+.chat-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    /* font-family: Arial, sans-serif; */
+    font-family: Inter, sans-serif;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+    color: #fff;
+    /* fix for Chrome */
+}
+
+.chat-messages {
+    list-style-type: none;
+    padding: 0;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    height: 200px;
+    overflow-y: scroll;
+}
+
+.chat-messages li {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.chat-messages li:last-child {
+    border-bottom: none;
+}
+
+.chat-form {
+    display: flex;
+}
+
+.chat-form input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.chat-form button {
+    margin-left: 10px;
+    padding: 10px 20px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+}

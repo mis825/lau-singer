@@ -27,3 +27,13 @@ body {
   font-size: 18px;
   display: block;
 }
+
+a {
+  color: #61dafb;
+  text-decoration: none;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+a:hover {
+  color: #b0ecfc;
+}
