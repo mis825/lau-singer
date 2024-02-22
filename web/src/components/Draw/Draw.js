@@ -2,10 +2,10 @@ import React from "react";
 // import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 
-import "./Game.css";
+import "./Draw.css";
 import Menu from "./Menu";
 
-function Game(props) {
+function Draw(props) {
     
     const canvasRef = useRef(null); 
     const ctxRef = useRef(null); 
@@ -63,7 +63,7 @@ function Game(props) {
     
         <br />
         
-        <div className="Game"> 
+        <div className="Canvas"> 
             <h1>Dinosaur</h1> 
             <div className="draw-area"> 
                 <Menu 
@@ -86,4 +86,4 @@ function Game(props) {
     );
 }
 
-export default Game;
+export default Draw;

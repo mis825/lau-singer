@@ -1,7 +1,7 @@
 // Menu.js 
   
 import React from "react"; 
-import "./Game.css"; 
+import "./Draw.css"; 
   
 const Menu = ({ setLineColor, setLineWidth, 
     setLineOpacity }) => { 
