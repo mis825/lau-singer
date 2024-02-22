@@ -10,7 +10,8 @@ function Login(props) {
 
   const navigate = useNavigate();
 
-  const onButtonClick = () => {
+  const onFormSubmit = (e) => {
+    e.preventDefault();
     setNameError("");
 
     if ("" === name) {
@@ -18,8 +19,7 @@ function Login(props) {
       return;
     }
 
-    logIn()
-
+    logIn();
   };
 
   const logIn = () => {
@@ -37,12 +37,12 @@ function Login(props) {
       if (response.ok) {
         props.setLoggedIn(true);
         props.setName(name);
-        navigate("/rooms")
+        navigate("/draw");
       } else {
         setNameError("Name already taken");
       }
     });
-  }
+  };
 
   return (
     <div className="Login">
@@ -52,12 +52,14 @@ function Login(props) {
 
       <br />
       <div className={"inputContainer"}>
-        <input
-          value={name}
-          placeholder="Enter your name"
-          onChange={(ev) => setName(ev.target.value)}
-          className={"inputBox"}
-        />
+        <form onSubmit={onFormSubmit}>
+          <input
+            value={name}
+            placeholder="Enter your name"
+            onChange={(ev) => setName(ev.target.value)}
+            className={"inputBox"}
+          />
+        </form>
         <label className="errorLabel">{nameError}</label>
       </div>
 
@@ -66,7 +68,7 @@ function Login(props) {
         <input
           className={"inputButton"}
           type="button"
-          onClick={onButtonClick}
+          onClick={onFormSubmit}
           value={"Enter"}
         />
       </div>
