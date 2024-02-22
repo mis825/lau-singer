@@ -19,7 +19,7 @@ function App() {
           {/* <Route path="/" element={<Test />} /> */}
           <Route path="/" element={<Login setLoggedIn={setLoggedIn} setName={setName} />} />
           {/* <Route path="/rooms" element={<Rooms loggedIn={loggedIn} name={name} />} /> */}
-          <Route path="/chat" element={<Chat setLoggedIn={setLoggedIn} name={name} />} />
+          <Route path="/chat" element={<Chat loggedIn={loggedIn} name={name} />} />
         </Routes>
       </BrowserRouter>
     </div>

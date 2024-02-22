@@ -12,7 +12,7 @@ const Chat = (props) => {
   const messageList = useRef(null);
 
   useEffect(() => {
-    if (props.name) {
+    if (props.name && props.loggedIn) {
       socket.emit("join", { username: props.name, room: "304270" });
 
       socket.on("message", (message) => {
@@ -47,7 +47,7 @@ const Chat = (props) => {
 
   const sendMessage = (e) => {
     e.preventDefault();
-    if (message && props.name) {
+    if (message && props.name && props.loggedIn) {
       socket.emit(
         "message",
         { username: props.name, message: message, room: "304270" },
@@ -58,7 +58,7 @@ const Chat = (props) => {
 
   return (
     <div className="chat-container">
-      {!props.name ? (
+      {!props.name || !props.loggedIn ? (
         <a href="/">Log in to begin chatting</a>
       ) : (
         <div>
