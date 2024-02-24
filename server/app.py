@@ -16,13 +16,12 @@ app = Flask(__name__)
 CORS(app)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # silence the deprecation warning
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -133,8 +132,10 @@ def handle_connect():
 
 @socketio.on('join_room')
 def handle_join_room(data):
-    # get the room code from the data
+    # get the room code and username from the data
     room_code = data['room']
+    username = data['username']
+
     # check if the room exists
     room = Room.query.filter_by(code=room_code).first()
 
@@ -146,7 +147,7 @@ def handle_join_room(data):
         db.session.commit()
 
     join_room(room.code)
-    send(f"{session['username']} has joined the room.", room=room.code)
+    send(f"{username} has joined the room: {room}.", room=room.code)
 
 @socketio.on('leave_room')
 def handle_leave_room(data):
