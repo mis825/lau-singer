@@ -17,27 +17,23 @@ def test_get_rooms():
     response = requests.get('http://localhost:5000/api/get-rooms')
     print(response.json())
     
-# def test_join_room():
-#     response = requests.get('http://localhost:5000/join/367757')
-#     print(response.status_code)
-    
 def test_join_room():
     sio = Client()
 
     @sio.event
     def connect():
-        print('connection established')
+        print('Connection Established')
 
     @sio.event
     def disconnect():
-        print('disconnected from server')
+        print('Disconnected From Server')
 
     @sio.on('message')
     def on_message(data):
-        print('message received with ', data)
+        print('Message Received: ', data)
 
     sio.connect('http://localhost:5000')
-    sio.emit('join_room', {'room': 'testroom'})
+    sio.emit('join_room', {'room': 'testroom', 'username': 'testuser'})
     sio.wait()
 
 if __name__ == "__main__":
