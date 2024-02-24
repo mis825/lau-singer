@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify, redirect, url_for, session
 from flask_socketio import SocketIO, join_room, leave_room, send, emit
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 
 load_dotenv() 
@@ -17,6 +18,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # silence the deprecation warning
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
 socketio = SocketIO(app)
 
 logging.basicConfig(level=logging.INFO)
@@ -104,7 +107,7 @@ def handle_join_room(data):
 
     if room is None:
         # the room does not exist, so create a new one
-        room_code = generate_room_code()
+        room_code = generate_room_code() # this function will always return a unique room code
         room = Room(code=room_code)
         db.session.add(room)
         db.session.commit()
@@ -131,6 +134,8 @@ def generate_room_code():
         room = Room.query.filter_by(code=room_code).first()
         if room is None:
             return room_code
+        else:
+            continue # try again
 
 if __name__ == "__main__":
     with app.app_context():
