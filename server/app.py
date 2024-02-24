@@ -139,6 +139,5 @@ def generate_room_code():
 
 if __name__ == "__main__":
     with app.app_context():
-        create_tables()
+        create_tables() # create the database tables if they do not exist
     socketio.run(app, host="localhost", debug=True)
-            
