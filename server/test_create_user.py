@@ -26,6 +26,6 @@ def create_user(username, password):
 
 if __name__ == '__main__':
     # create a test user here 
-    username = 'testuser'
-    password = 'testpassword'
+    username = ''
+    password = ''
     create_user(username, password)
