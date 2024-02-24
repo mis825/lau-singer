@@ -1,3 +1,8 @@
+
+:root {
+    --color-login-button: #6f6fd7;
+}
+
 .Login {
     text-align: center;
     font-family: Inter, sans-serif;
@@ -6,7 +11,7 @@
 
 body {
     margin: 0;
-    background-color: #282c34;
+    background-color: var(--color-background);
 }
 
 @supports (font-variation-settings: normal) {
@@ -21,7 +26,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: calc(10px + 2vmin);
-    color: white;
+    color: var(--color-text);
 }
 
 .inputBox {
@@ -29,7 +34,7 @@ body {
     width: 400px;
     font-size: large;
     border-radius: 8px;
-    border: 1px solid grey;
+    border: none;
     padding-left: 8px;
 }
 
@@ -39,8 +44,8 @@ body {
 
 input[type="button"] {
     border: none;
-    background: cornflowerblue;
-    color: white;
+    background: var(--color-login-button);
+    color: var(--color-text);
     padding: 12px 24px;
     margin: 8px;
     font-size: 24px;

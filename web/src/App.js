@@ -6,6 +6,7 @@ import './App.css'
 import Login from './components/Login/Login'
 import Rooms from './components/Rooms/Rooms'
 import Test from './components/Test/Test'
+import Chat from './components/Chat/Chat'
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(false)
@@ -17,7 +18,8 @@ function App() {
         <Routes>
           {/* <Route path="/" element={<Test />} /> */}
           <Route path="/" element={<Login setLoggedIn={setLoggedIn} setName={setName} />} />
-          <Route path="/rooms" element={<Rooms loggedIn={loggedIn} name={name} />} />
+          {/* <Route path="/rooms" element={<Rooms loggedIn={loggedIn} name={name} />} /> */}
+          <Route path="/chat" element={<Chat loggedIn={loggedIn} name={name} />} />
         </Routes>
       </BrowserRouter>
     </div>

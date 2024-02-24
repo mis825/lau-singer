@@ -1,12 +1,26 @@
+
+:root {
+  --color-primary: #3f51b5;
+  --color-secondary: #f50057;
+  --color-background: #282c34;
+  --color-background-secondary: #1a1b1e;
+  --color-text: #fff;
+  --color-text-secondary: #ddd;
+  --color-hyperlink: #61dafb;
+  --color-highlight: #cbf4ff;
+  --color-border: #ddd;
+  --color-error: #ff6b6b;
+}
+
 .App {
   text-align: center;
   font-family: Inter, sans-serif;
-  font-feature-settings: 'liga' 1, 'calt' 1; /* fix for Chrome */
+  font-feature-settings: 'liga' 1, 'calt' 1;
 }
 
 body {
   margin: 0;
-  background-color: #282c34;
+  background-color: var(--color-background);
 }
 
 @supports (font-variation-settings: normal) {
@@ -19,11 +33,21 @@ body {
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
-  color: white;
+  color: var(--color-text);
 }
 
 .errorLabel {
-  color: rgb(255, 107, 107);
+  color: var(--color-error);
   font-size: 18px;
   display: block;
+}
+
+a {
+  color: var(--color-hyperlink);
+  text-decoration: none;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+a:hover {
+  color: var(--color-highlight);
 }
