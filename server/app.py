@@ -30,7 +30,7 @@ logger = logging.getLogger()
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(120), nullable=False)
+    password_hash = db.Column(db.String(120))
 
 # Room Table
 class Room(db.Model):
@@ -56,10 +56,15 @@ def create_tables():
 @app.route('/register', methods=['POST'])
 def register():
     username = request.form['username']
-    password = request.form['password']
-    hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+    # password = request.form['password']
+    # hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
 
-    new_user = User(username=username, password_hash=hashed_password)
+    # Check if username already exists
+    user = User.query.filter_by(username=username).first()
+    if user:
+        return jsonify({"message": "Username already taken. Please choose a different name."}), 400
+    
+    new_user = User(username=username)
     db.session.add(new_user)
     db.session.commit()
 
@@ -68,11 +73,11 @@ def register():
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form['username']
-    password = request.form['password']
+    # password = request.form['password']
     user = User.query.filter_by(username=username).first()
 
-    if not user or not check_password_hash(user.password_hash, password):
-        return jsonify({"message": "Invalid username or password"}), 401
+    if not user:
+        return jsonify({"message": "Invalid username"}), 401
 
     session['username'] = user.username
     return jsonify({"message": "Login successful"}), 200
@@ -127,6 +132,8 @@ def handle_send_message(data):
     db.session.add(message)
     db.session.commit()
     emit('receive_message', data, room=room_code)
+    
+
     
 def generate_room_code():
     while True:
