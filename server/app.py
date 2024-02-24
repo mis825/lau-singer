@@ -4,6 +4,7 @@ import random
 from datetime import datetime
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, redirect, url_for, session
+from flask_cors import CORS
 from flask_socketio import SocketIO, join_room, leave_room, send, emit
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -12,6 +13,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 load_dotenv() 
 
 app = Flask(__name__)
+CORS(app)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 
@@ -51,6 +53,15 @@ class Message(db.Model):
 # Create database tables
 def create_tables():
     db.create_all()
+    
+def generate_room_code():
+    while True:
+        room_code = ''.join(random.choice('0123456789') for _ in range(6))
+        room = Room.query.filter_by(code=room_code).first()
+        if room is None:
+            return room_code
+        else:
+            continue # try again
 
 # Routes
 @app.route('/register', methods=['POST'])
@@ -102,12 +113,6 @@ def join_room_by_code(room_code):
     # Redirect the user to the room page
     return redirect(url_for('room_page', room_code=room.code))
 
-@socketio.on('connect')
-def handle_connect():
-    # Add the user to the room
-    if 'room_code' in session:
-        join_room(session['room_code'])
-
 @app.route('/room/<room_code>', methods=['GET'])
 def room_page(room_code):
     room = Room.query.filter_by(code=room_code).first()
@@ -119,6 +124,12 @@ def room_page(room_code):
     
     # placeholder for now
     return jsonify({"message": f"You are in room {room.code}"}), 200
+
+@socketio.on('connect')
+def handle_connect():
+    # Add the user to the room
+    if 'room_code' in session:
+        join_room(session['room_code'])
 
 @socketio.on('join_room')
 def handle_join_room(data):
@@ -159,15 +170,6 @@ def handle_send_message(data):
     db.session.add(message)
     db.session.commit()
     emit('receive_message', data, room=room_code)
-    
-def generate_room_code():
-    while True:
-        room_code = ''.join(random.choice('0123456789') for _ in range(6))
-        room = Room.query.filter_by(code=room_code).first()
-        if room is None:
-            return room_code
-        else:
-            continue # try again
 
 if __name__ == "__main__":
     with app.app_context():
