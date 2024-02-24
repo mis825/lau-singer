@@ -65,8 +65,9 @@ def generate_room_code():
 # Routes
 @app.route('/register', methods=['POST'])
 def register():
-    username = request.form['username']
-    # password = request.form['password']
+    data = request.get_json()
+    username = data['username']
+    # password = data['password']
     # hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
 
     # Check if username already exists
@@ -82,8 +83,9 @@ def register():
 
 @app.route('/login', methods=['POST'])
 def login():
-    username = request.form['username']
-    # password = request.form['password']
+    data = request.get_json()
+    username = data['username']
+    # password = data['password']
     user = User.query.filter_by(username=username).first()
 
     if not user:
