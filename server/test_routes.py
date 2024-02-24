@@ -36,8 +36,29 @@ def test_join_room():
     sio.emit('join_room', {'room': 'testroom', 'username': 'testuser'})
     sio.wait()
 
+def test_leave_room():
+    sio = Client()
+
+    @sio.event
+    def connect():
+        print('connection established')
+
+    @sio.event
+    def disconnect():
+        print('disconnected from server')
+
+    @sio.on('message')
+    def on_message(data):
+        print('message received with ', data)
+
+    sio.connect('http://localhost:5000')
+    sio.emit('join_room', {'room': 'testroom', 'username': 'testuser'})
+    sio.emit('leave_room', {'room': 'testroom', 'username': 'testuser'})
+    sio.wait()
+
 if __name__ == "__main__":
-    test_register()
-    test_login()
+    # test_register()
+    # test_login()
     test_get_rooms()
-    test_join_room()
+    # test_join_room()
+    test_leave_room()
