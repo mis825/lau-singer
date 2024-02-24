@@ -82,17 +82,31 @@ def login():
     session['username'] = user.username
     return jsonify({"message": "Login successful"}), 200
 
+@app.route('/api/get-rooms', methods=['GET'])
+def get_rooms():
+    try:
+        rooms = Room.query.all()
+        return jsonify([room.code for room in rooms]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/join/<room_code>', methods=['GET'])
 def join_room_by_code(room_code):
     room = Room.query.filter_by(code=room_code).first()
     if room is None:
         return jsonify({"message": "Room not found"}), 404
 
-    # add the user to the room
-    join_room(room.code)
+    # Store the room code in the user's session
+    session['room_code'] = room.code
 
-    # redirect the user to the room page
+    # Redirect the user to the room page
     return redirect(url_for('room_page', room_code=room.code))
+
+@socketio.on('connect')
+def handle_connect():
+    # Add the user to the room
+    if 'room_code' in session:
+        join_room(session['room_code'])
 
 @app.route('/room/<room_code>', methods=['GET'])
 def room_page(room_code):
@@ -102,6 +116,9 @@ def room_page(room_code):
 
     # Render the room page here
     # return render_template('room.html', room=room)
+    
+    # placeholder for now
+    return jsonify({"message": f"You are in room {room.code}"}), 200
 
 @socketio.on('join_room')
 def handle_join_room(data):
@@ -122,8 +139,18 @@ def handle_join_room(data):
 
 @socketio.on('leave_room')
 def handle_leave_room(data):
-    leave_room(data['room'])
-    send(f"{session['username']} has left the room.", room=data['room'])
+    try:
+        leave_room(data['room'])
+        send(f"{session['username']} has left the room.", room=data['room'])
+
+        # Check if the room is empty
+        room = Room.query.filter_by(code=data['room']).first()
+        if room and not socketio.server.rooms(data['room']):  # Check if the room is empty
+            # Delete the room from the database
+            db.session.delete(room)
+            db.session.commit()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @socketio.on('send_message')
 def handle_send_message(data):
@@ -132,8 +159,6 @@ def handle_send_message(data):
     db.session.add(message)
     db.session.commit()
     emit('receive_message', data, room=room_code)
-    
-
     
 def generate_room_code():
     while True:
