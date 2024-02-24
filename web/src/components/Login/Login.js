@@ -24,10 +24,10 @@ function Login(props) {
 
   const logIn = () => {
     const data = {
-      name: name,
+      username: name,
     };
 
-    fetch("http://localhost:5000/api/create-user", {
+    fetch("http://localhost:5000/register", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
