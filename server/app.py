@@ -169,7 +169,8 @@ def handle_leave_room(data):
 @socketio.on('send_message')
 def handle_send_message(data):
     room_code = data['room']
-    message = Message(content=data['message'], user_id=session['user_id'], room_id=room_code)
+    sid = request.sid
+    message = Message(content=data['message'], user_id=sid, room_id=room_code)
     db.session.add(message)
     db.session.commit()
     emit('receive_message', data, room=room_code)
