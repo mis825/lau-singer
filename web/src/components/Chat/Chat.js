@@ -13,12 +13,12 @@ const Chat = (props) => {
 
   useEffect(() => {
     if (props.name && props.loggedIn) {
-      socket.emit("join", { username: props.name, room: "304270" });
+      socket.emit("join_room", { username: props.name, room: "304270" });
 
-      socket.on("message", (message) => {
+      socket.on("receive_message", (message) => {
         setMessages((messages) => [
           ...messages,
-          { username: message.username, message: message.msg },
+          { user_id: message.username, message: message.msg },
         ]);
       });
 
@@ -49,8 +49,8 @@ const Chat = (props) => {
     e.preventDefault();
     if (message && props.name && props.loggedIn) {
       socket.emit(
-        "message",
-        { username: props.name, message: message, room: "304270" },
+        "send_message",
+        { user_id: props.name, message: message, room: "304270" },
         () => setMessage("")
       );
     }
