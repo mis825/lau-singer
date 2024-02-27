@@ -12,6 +12,14 @@
     }
 }
 
+.chat-header {
+    background-color: var(--color-background-secondary);
+    max-width: fit-content;
+    margin: 0 auto;
+    padding: 2px;
+    border-radius: 8px;
+}
+
 .chat-container {
     width: 90%;
     margin: 0 auto;
@@ -29,6 +37,7 @@
     border: 1px solid var(--color-text-secondary);
     height: 200px;
     overflow-y: scroll;
+    border-radius: 8px;
 }
 
 .chat-messages li {

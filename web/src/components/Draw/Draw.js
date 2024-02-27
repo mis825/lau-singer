@@ -12,6 +12,13 @@ function Draw(props) {
   const [lineColor, setLineColor] = useState("black");
   const [lineOpacity, setLineOpacity] = useState(0.1);
 
+  // Function for clearing the canvas
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
   // Initialization when the component
   // mounts for the first time
   useEffect(() => {
@@ -50,14 +57,15 @@ function Draw(props) {
   return (
     <div className="Game-head">
       <div className="Canvas">
-        <h1>
-          Draw <span className="drawWord">Dinosaur</span>
+        <h1 className="draw-prompt">
+          Draw <span className="draw-word">Dinosaur</span>
         </h1>
         <div className="draw-area">
           <Menu
             setLineColor={setLineColor}
             setLineWidth={setLineWidth}
             setLineOpacity={setLineOpacity}
+            clearCanvas={clearCanvas}
           />
           <canvas
             onMouseDown={startDrawing}

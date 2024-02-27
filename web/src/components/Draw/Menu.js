@@ -4,26 +4,26 @@ import React from "react";
 import "./Draw.css"; 
   
 const Menu = ({ setLineColor, setLineWidth, 
-    setLineOpacity }) => { 
+    setLineOpacity, clearCanvas }) => {
     return ( 
         <div className="Menu"> 
-            <label>Brush Color </label> 
+            <label>Color </label> 
             <input 
                 type="color"
                 onChange={(e) => { 
                     setLineColor(e.target.value); 
                 }} 
             /> 
-            <label>Brush Width </label> 
+            <label>Size </label> 
             <input 
                 type="range"
                 min="3"
-                max="20"
+                max="40"
                 onChange={(e) => { 
                     setLineWidth(e.target.value); 
                 }} 
             /> 
-            <label>Brush Opacity</label> 
+            <label>Opacity</label> 
             <input 
                 type="range"
                 min="1"
@@ -32,6 +32,11 @@ const Menu = ({ setLineColor, setLineWidth,
                     setLineOpacity(e.target.value / 100); 
                 }} 
             /> 
+            <button onClick={() => { 
+                clearCanvas();
+            }}> 
+                Clear
+            </button>
         </div> 
     ); 
 }; 

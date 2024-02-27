@@ -21,13 +21,21 @@
     justify-content: flex-start;
     align-items: center;
     background-image: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    border-radius: 10px;
 }
 
-.drawWord {
+.draw-prompt {
+    color: var(--color-background-secondary);
+}
+
+.draw-word {
     font-size: 1em;
     font-weight: bold;
     color: var(--drawWord);
     margin-bottom: 10px;
+    border-radius: 5px;
+    border: 5px solid var(--drawWord);
+    padding: 5px;
 }
 
 .draw-area {

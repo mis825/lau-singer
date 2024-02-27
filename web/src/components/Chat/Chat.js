@@ -22,7 +22,7 @@ const Chat = (props) => {
         ]);
       });
 
-      socket.on("leave", (message) => {
+      socket.on("leave_room", (message) => {
         setMessages((messages) => [
           ...messages,
           { username: message.username, message: message.msg },
@@ -32,11 +32,11 @@ const Chat = (props) => {
       // Cleanup function
       return () => {
         socket.off("message");
-        socket.off("leave");
-        socket.emit("leave", { username: props.name, room: "304270" });
+        socket.off("leave_room");
+        socket.emit("leave_room", { username: props.name, room: props.room });
       };
     }
-  }, []);
+  }, [props.name, props.loggedIn, props.room]);
 
   // Autoscroll
   useEffect(() => {
@@ -62,7 +62,7 @@ const Chat = (props) => {
         <a href="/">Log in to begin chatting</a>
       ) : (
         <div>
-          <h3>Room {props.room}</h3>
+          <div className="chat-header">Room {props.room}</div>
           <ul className="chat-messages" ref={messageList}>
             {messages.map((msg, index) => (
               <li key={index}>
