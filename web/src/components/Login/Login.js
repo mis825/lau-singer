@@ -18,8 +18,7 @@ function Login(props) {
       return;
     }
 
-    logIn()
-
+    logIn();
   };
 
   const logIn = () => {
@@ -37,12 +36,12 @@ function Login(props) {
       if (response.ok) {
         props.setLoggedIn(true);
         props.setName(name);
-        navigate("/chat")
+        navigate("/rooms");
       } else {
         setNameError("Name already taken");
       }
     });
-  }
+  };
 
   return (
     <div className="Login">

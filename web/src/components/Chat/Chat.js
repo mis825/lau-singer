@@ -13,12 +13,12 @@ const Chat = (props) => {
 
   useEffect(() => {
     if (props.name && props.loggedIn) {
-      socket.emit("join_room", { username: props.name, room: "304270" });
+      socket.emit("join_room", { username: props.name, room: props.room });
 
       socket.on("receive_message", (message) => {
         setMessages((messages) => [
           ...messages,
-          { user_id: message.username, message: message.msg },
+          { username: message.username, message: message.msg },
         ]);
       });
 
@@ -50,7 +50,7 @@ const Chat = (props) => {
     if (message && props.name && props.loggedIn) {
       socket.emit(
         "send_message",
-        { user_id: props.name, message: message, room: "304270" },
+        { username: props.name, msg: message, room: props.room },
         () => setMessage("")
       );
     }
@@ -62,6 +62,7 @@ const Chat = (props) => {
         <a href="/">Log in to begin chatting</a>
       ) : (
         <div>
+          <h3>Room {props.room}</h3>
           <ul className="chat-messages" ref={messageList}>
             {messages.map((msg, index) => (
               <li key={index}>

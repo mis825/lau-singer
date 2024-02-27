@@ -170,9 +170,9 @@ def handle_leave_room(data):
 def handle_send_message(data):
     room_code = data['room']
     sid = request.sid
-    message = Message(content=data['message'], user_id=sid, room_id=room_code)
-    db.session.add(message)
-    db.session.commit()
+    # message = Message(content=data['message'], user_id=sid, room_id=room_code)
+    # db.session.add(message)
+    # db.session.commit()
     emit('receive_message', data, room=room_code)
 
 if __name__ == "__main__":
