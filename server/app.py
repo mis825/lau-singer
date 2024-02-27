@@ -139,12 +139,18 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    # tterate over a copy of the active_rooms dictionary
+    #  the dictionary's keys (room codes) and values (sets of clients) are unpacked into room_code and clients
     for room_code, clients in list(active_rooms.items()):
+        # check if the sid of the disconnecting client is in the set of clients for this room.
         if request.sid in clients:
+            # if so, remove the sid from the set of clients.
             clients.remove(request.sid)
-            # If there are no clients in the room, delete the room
+            # check if the set of clients is now empty
             if not clients:
+                # if so, delete the room from the active_rooms dictionary
                 del active_rooms[room_code]
+            # break out of the loop, since a client can only be in one room at a time, and we have found the room, so no need to check the other rooms
             break
 
 @socketio.on('join_room')
