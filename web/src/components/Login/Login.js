@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import Socket from "../../services/Socket";
 
 import "./Login.css";
 
@@ -36,6 +37,7 @@ function Login(props) {
       if (response.ok) {
         props.setLoggedIn(true);
         props.setName(name);
+        Socket.init(name);
         navigate("/rooms");
       } else {
         setNameError("Name already taken");

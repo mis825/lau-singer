@@ -175,6 +175,28 @@ def handle_send_message(data):
     # db.session.commit()
     emit('receive_message', data, room=room_code)
 
+drawingState = []
+@socketio.on('lineDraw')
+def line_drawn(data):
+    room_code = data['room']
+    line = data['line']
+    drawingState.append(line)
+    emit('lineDraw', data, room=room_code)
+
+@socketio.on('clearCanvas')
+def clear_canvas(data):
+    room_code = data['room']
+    drawingState.clear()
+    emit('clearCanvas', room=room_code)
+
+@socketio.on('drawingState')
+def get_drawing_state(data):
+    room_code = data['room']
+    emit('drawingState', drawingState, room=room_code)
+
+def addToDrawingState(drawing):
+    drawingState.append(drawing)
+
 if __name__ == "__main__":
     with app.app_context():
         create_tables() # create the database tables if they do not exist

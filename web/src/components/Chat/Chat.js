@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
-import io from "socket.io-client";
+// import io from "socket.io-client";
+import Socket from "../../services/Socket";
 
 import "./Chat.css";
 
-const socket = io("http://localhost:5000");
+// const socket = Socket.getSocket();
+
+// console.log("socket", socket);
 
 const Chat = (props) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const socket = Socket.getSocket();
 
   const messageList = useRef(null);
 
