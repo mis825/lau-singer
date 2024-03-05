@@ -59,7 +59,6 @@ def test_send_message(sio, room, message):
 
     sio.sleep(5)
     # sio.disconnect()
-
     # print(f'Disconnected from {room}.')
 
 if __name__ == "__main__":
@@ -83,7 +82,7 @@ if __name__ == "__main__":
         test_join_route(f'user{i}', room_code)
     print('\n')
     
-    test_get_rooms()
+    active_rooms = test_get_rooms()
     print('\n')
     
     print('Testing sending messages in the rooms...')
@@ -98,5 +97,5 @@ if __name__ == "__main__":
     test_delete_room('user1', first_room_code)
     print('\n')
     
-    test_get_rooms()
+    active_rooms = test_get_rooms()
 
