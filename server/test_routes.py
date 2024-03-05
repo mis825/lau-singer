@@ -14,10 +14,7 @@ def test_join_room(username, room):
 
     @sio.on('receive_message')
     def on_receive_message(data, room=room):
-        print('Received data: ', data)
-        print('Room: ', room)
-        message = data['message']
-        print(f"Received message: {message}")
+        print(f'Received message in {room}: {data}\n')
 
     try:
         sio.connect('http://localhost:5000')
@@ -29,6 +26,7 @@ def test_join_room(username, room):
     return sio  # Return the client so it can be disconnected later
 
 def test_delete_room(username, room_code):
+    # username is a query parameter 
     response = requests.delete(f'http://localhost:5000/room/{room_code}?username={username}')
     if response.status_code == 200:
         print(f'{username} deleted room {room_code} successfully')
@@ -54,38 +52,51 @@ def test_join_route(username, room_code):
     else:
         print(f'Error joining room {room_code}: {response.status_code}')
 
-def test_send_message(sio, room):
-    print(f'Sending message in {room}')
-    sio.emit('send_message', { 'room': room, 'message': 'Hello, world!' })
-    print(f'Message sent')
+def test_send_message(sio, room, message):
+    print(f'Sending message in {room}') # DEBUG
+    sio.emit('send_message', {'room': room, 'message': message})
+    print(f'Message sent') # DEBUG
 
     sio.sleep(5)
-    sio.disconnect()
+    # sio.disconnect()
 
-    print(f'Disconnected from {room}.')
+    # print(f'Disconnected from {room}.')
 
 if __name__ == "__main__":
-    sio1=test_join_room('user1', 'room1')
+    print('Testing two clients joining the same room...')
+    sio1=test_join_room('user1', 'random_room')
     active_rooms = test_get_rooms()
     first_room_code = active_rooms[0]
     print('First room code:', first_room_code) # DEBUG
     sio2=test_join_room('user2', first_room_code)
-    # sio3=test_join_room('user3', 'room3')
-    # sio4=test_join_room('user4', 'room4')
+    print('\n')
     
+    print('Testing a client joining a different room...')
+    sio3=test_join_room('user3', 'another_room')
+    active_rooms = test_get_rooms()
+    second_room_code = active_rooms[1]
+    print('\n')
+
+    print('Testing multiple clients joining different rooms...')
     # More users join the rooms that the initial 3 users created
     for i, room_code in enumerate(active_rooms, 5):
         test_join_route(f'user{i}', room_code)
+    print('\n')
     
-    # sio1.disconnect()
-    # sio2.disconnect()
-    # sio3.disconnect()
     test_get_rooms()
-    # test_send_message(sio1, 'room1')
+    print('\n')
     
+    print('Testing sending messages in the rooms...')
+    test_send_message(sio1, first_room_code, 'Hi!!!!')
+    test_send_message(sio2, first_room_code, 'Bye!!!')
+    
+    print('Testing deleting rooms...')
     # shouldn't work because user2 is not the creator of room1
+    print('User2 trying to delete room1...should fail')
     test_delete_room('user2', first_room_code)
+    print('User1 deleting room1...should work')
     test_delete_room('user1', first_room_code)
-
+    print('\n')
+    
     test_get_rooms()
 
