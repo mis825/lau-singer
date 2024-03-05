@@ -27,9 +27,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 # logger.setLevel(logging.DEBUG) # uncomment to debug
 
-# active_rooms = set() 
-# A dictionary to store the active rooms and the clients in them
+# Global dictionary to store the active rooms and the clients in them
 active_rooms = {}
+# Global dictionary to store sid-username pairs
+sid_to_username = {}
+# Global dictionary to store room code-creator mapping
+room_to_creator = {}
 
 # User Table
 class User(db.Model):
@@ -42,16 +45,16 @@ class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(6), nullable=False, unique=True)  # Room code replaces name
 
-# Message Table
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(1000), nullable=False)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
+# # Message Table
+# class Message(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     content = db.Column(db.String(1000), nullable=False)
+#     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
 
-    user = db.relationship('User', backref=db.backref('messages', lazy=True))
-    room = db.relationship('Room', backref=db.backref('messages', lazy=True))
+#     user = db.relationship('User', backref=db.backref('messages', lazy=True))
+#     room = db.relationship('Room', backref=db.backref('messages', lazy=True))
 
 # Create database tables
 def create_tables():
@@ -60,8 +63,8 @@ def create_tables():
 def generate_room_code():
     while True:
         room_code = ''.join(random.choice('0123456789') for _ in range(6))
-        room = Room.query.filter_by(code=room_code).first()
-        if room is None:
+        # use the active_rooms dictionary to check if the room code already exists
+        if room_code not in active_rooms:
             return room_code
         else:
             continue # try again
@@ -131,15 +134,44 @@ def room_page(room_code):
     # placeholder for now
     return jsonify({"message": f"You are in room {room.code}"}), 200
 
+@app.route('/room/<room_code>', methods=['DELETE'])
+def delete_room(room_code):
+    # Get the username from the query parameters
+    username = request.args.get('username')
+
+    # Check if the room exists in active_rooms
+    if room_code not in active_rooms:
+        return jsonify({"message": "Room not found"}), 404
+
+    # Check if the current user is the creator of the room
+    room_creator = get_room_creator(room_code)
+    if username != room_creator:
+        return jsonify({"message": "Only the creator of the room can delete it"}), 403
+
+    # Delete the room from active_rooms
+    del active_rooms[room_code]
+
+    return jsonify({"message": f"Room {room_code} deleted successfully"}), 200
+
+def get_current_user():
+    # get the username associated with the sid
+    return sid_to_username.get(request.sid)
+
+def get_room_creator(room_code):
+    # get the username of the creator associated with the room code
+    return room_to_creator.get(room_code)
+
 @socketio.on('connect')
 def handle_connect():
     # Add the user to the room
     if 'room_code' in session:
         join_room(session['room_code'])
+        # store the username-sid pair in the sid_to_username dictionary
+        sid_to_username[request.sid] = session['username']
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    # tterate over a copy of the active_rooms dictionary
+    # iterate over a copy of the active_rooms dictionary
     #  the dictionary's keys (room codes) and values (sets of clients) are unpacked into room_code and clients
     for room_code, clients in list(active_rooms.items()):
         # check if the sid of the disconnecting client is in the set of clients for this room.
@@ -164,10 +196,12 @@ def handle_join_room(data):
         # the room does not exist, so create a new one
         room_code = generate_room_code()  # this function will always return a unique room code
         active_rooms[room_code] = set()
+        # Store the username of the creator with the room code when the room is created
+        room_to_creator[room_code] = username
 
     join_room(room_code)
     active_rooms[room_code].add(request.sid)
-    send(f"{username} has joined the room: {room_code}.", room=room_code)
+    send(f"{username} has joined the room: {room_code}.", to=room_code)
 
 @socketio.on('leave_room')
 def handle_leave_room(data):
