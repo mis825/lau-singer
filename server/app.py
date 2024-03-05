@@ -117,7 +117,7 @@ def join_room_by_code(room_code):
         print("Room found") # DEBUG 
 
     # Return a JSON response with a success message
-    return jsonify({"message": f"Successfully joined room {room_code}"})
+    return jsonify({"message": f"Successfully joined room {room_code}"}), 200
 
 @app.route('/room/<room_code>', methods=['GET'])
 def room_page(room_code):
@@ -184,12 +184,17 @@ def handle_leave_room(data):
 
 @socketio.on('send_message')
 def handle_send_message(data):
-    room_code = data['room']
+    room = data['room']
+    message = data['message'] # test 
     sid = request.sid
-    message = Message(content=data['message'], user_id=sid, room_id=room_code)
-    db.session.add(message)
-    db.session.commit()
-    emit('receive_message', data, room=room_code)
+    data['sid'] = sid
+    
+    print(f'room: {room}') # DEBUG
+    print(f'message: {message}') # DEBUG
+    print(f'sid: {sid}') # DEBUG
+    
+    print(f'Emitting receive_message in {room}')  # DEBUG
+    emit('receive_message', data, room=room)
 
 if __name__ == "__main__":
     with app.app_context():
