@@ -187,6 +187,7 @@ def line_drawn(data):
 def clear_canvas(data):
     room_code = data['room']
     drawingState.clear()
+    # print(drawingState)
     emit('clearCanvas', room=room_code)
 
 @socketio.on('drawingState')

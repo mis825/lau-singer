@@ -21,7 +21,8 @@
 }
 
 .chat-container {
-    width: 90%;
+    /* width: 90%; */
+    min-width: 400px;
     margin: 0 auto;
     margin-top: 20vh;
     padding: 20px;

@@ -21,20 +21,14 @@ const Canvas = (props) => {
     context.setCtx(ctx);
   }, []);
 
+  
+
   return (
     <canvas
       ref={ref}
-      onMouseDown={(ev) => {
-        context.setIsDrawing(true);
-        context.draw(ev, false);
-      }}
-      onMouseUp={() => {
-        context.setIsDrawing(false);
-        context.draw(null, true);
-      }}
-      onMouseMove={(ev) => {
-        context.draw(ev, false);
-      }}
+      onMouseDown={context.handleMouseDown}
+      onMouseUp={context.handleMouseUp}
+      onMouseMove={context.handleMouseMove}
     />
   );
 };

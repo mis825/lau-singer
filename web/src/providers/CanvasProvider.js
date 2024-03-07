@@ -67,6 +67,24 @@ const CanvasProvider = ({children}) => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   };
 
+  const handleMouseMove = (ev) => {
+    draw(ev);
+  };
+  const handleMouseDown = (ev) => {
+    setIsDrawing(true);
+    draw(ev);
+  };
+  const handleMouseUp = (ev) => {
+    draw(ev, true);
+    setIsDrawing(false);
+  };
+  const handleColorChange = (ev) => {
+    setColor(ev.target.value);
+  };
+  const handleBrushSizeChange = (ev) => {
+    setWidth(parseInt(ev.target.value));
+  };
+
   return (
     <CanvasContext.Provider
       value={{
@@ -80,6 +98,11 @@ const CanvasProvider = ({children}) => {
         setWidth,
         draw,
         clearCanvas,
+        handleMouseMove,
+        handleMouseDown,
+        handleMouseUp,
+        handleColorChange,
+        handleBrushSizeChange,
       }}
     >
       {children}
