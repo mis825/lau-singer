@@ -5,7 +5,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, redirect, url_for, session
 from flask_cors import CORS
-from flask_socketio import SocketIO, join_room, leave_room, send, emit
+from flask_socketio import SocketIO, join_room, leave_room, send, emit, disconnect
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -27,6 +27,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 # logger.setLevel(logging.DEBUG) # uncomment to debug
 
+# Global dictionary to store the active rooms and the clients in them
+active_rooms = {}
+# Global dictionary to store sid-username pairs
+sid_to_username = {}
+# Global dictionary to store room code-creator mapping
+room_to_creator = {}
+
 # User Table
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -38,16 +45,16 @@ class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(6), nullable=False, unique=True)  # Room code replaces name
 
-# Message Table
-class Message(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(1000), nullable=False)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
+# # Message Table
+# class Message(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     content = db.Column(db.String(1000), nullable=False)
+#     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+#     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#     room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
 
-    user = db.relationship('User', backref=db.backref('messages', lazy=True))
-    room = db.relationship('Room', backref=db.backref('messages', lazy=True))
+#     user = db.relationship('User', backref=db.backref('messages', lazy=True))
+#     room = db.relationship('Room', backref=db.backref('messages', lazy=True))
 
 # Create database tables
 def create_tables():
@@ -56,8 +63,8 @@ def create_tables():
 def generate_room_code():
     while True:
         room_code = ''.join(random.choice('0123456789') for _ in range(6))
-        room = Room.query.filter_by(code=room_code).first()
-        if room is None:
+        # use the active_rooms dictionary to check if the room code already exists
+        if room_code not in active_rooms:
             return room_code
         else:
             continue # try again
@@ -96,23 +103,24 @@ def login():
 
 @app.route('/api/get-rooms', methods=['GET'])
 def get_rooms():
-    try:
-        rooms = Room.query.all()
-        return jsonify([room.code for room in rooms]), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return jsonify(list(active_rooms.keys())), 200
 
 @app.route('/join/<room_code>', methods=['GET'])
 def join_room_by_code(room_code):
-    room = Room.query.filter_by(code=room_code).first()
-    if room is None:
+    # handle the client connections here, just use the join_room function in sio
+    print(active_rooms)
+    # for key in active_rooms.keys():
+    #     print(type(key))
+    #     break
+    room_code_str = str(room_code)
+
+    if room_code_str not in active_rooms:
         return jsonify({"message": "Room not found"}), 404
+    else: 
+        print("Room found") # DEBUG 
 
-    # Store the room code in the user's session
-    session['room_code'] = room.code
-
-    # Redirect the user to the room page
-    return redirect(url_for('room_page', room_code=room.code))
+    # Return a JSON response with a success message
+    return jsonify({"message": f"Successfully joined room {room_code}"}), 200
 
 @app.route('/room/<room_code>', methods=['GET'])
 def room_page(room_code):
@@ -126,11 +134,56 @@ def room_page(room_code):
     # placeholder for now
     return jsonify({"message": f"You are in room {room.code}"}), 200
 
+@app.route('/room/<room_code>', methods=['DELETE'])
+def delete_room(room_code):
+    # Get the username from the query parameters
+    username = request.args.get('username')
+
+    # Check if the room exists in active_rooms
+    if room_code not in active_rooms:
+        return jsonify({"message": "Room not found"}), 404
+
+    # Check if the current user is the creator of the room
+    room_creator = get_room_creator(room_code)
+    if username != room_creator:
+        return jsonify({"message": "Only the creator of the room can delete it"}), 403
+
+    # Delete the room from active_rooms
+    del active_rooms[room_code]
+
+    return jsonify({"message": f"Room {room_code} deleted successfully"}), 200
+
+def get_current_user():
+    # get the username associated with the sid
+    return sid_to_username.get(request.sid)
+
+def get_room_creator(room_code):
+    # get the username of the creator associated with the room code
+    return room_to_creator.get(room_code)
+
 @socketio.on('connect')
 def handle_connect():
     # Add the user to the room
     if 'room_code' in session:
         join_room(session['room_code'])
+        # store the username-sid pair in the sid_to_username dictionary
+        sid_to_username[request.sid] = session['username']
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    # iterate over a copy of the active_rooms dictionary
+    #  the dictionary's keys (room codes) and values (sets of clients) are unpacked into room_code and clients
+    for room_code, clients in list(active_rooms.items()):
+        # check if the sid of the disconnecting client is in the set of clients for this room.
+        if request.sid in clients:
+            # if so, remove the sid from the set of clients.
+            clients.remove(request.sid)
+            # check if the set of clients is now empty
+            if not clients:
+                # if so, delete the room from the active_rooms dictionary
+                del active_rooms[room_code]
+            # break out of the loop, since a client can only be in one room at a time, and we have found the room, so no need to check the other rooms
+            break
 
 @socketio.on('join_room')
 def handle_join_room(data):
@@ -138,42 +191,44 @@ def handle_join_room(data):
     room_code = data['room']
     username = data['username']
 
-    # check if the room exists
-    room = Room.query.filter_by(code=room_code).first()
-
-    if room is None:
+    # check if the room exists in active_rooms
+    if room_code not in active_rooms:
         # the room does not exist, so create a new one
-        room_code = generate_room_code() # this function will always return a unique room code
-        room = Room(code=room_code)
-        db.session.add(room)
-        db.session.commit()
+        room_code = generate_room_code()  # this function will always return a unique room code
+        active_rooms[room_code] = set()
+        # Store the username of the creator with the room code when the room is created
+        room_to_creator[room_code] = username
 
-    join_room(room.code)
-    send(f"{username} has joined the room: {room}.", room=room.code)
+    join_room(room_code)
+    active_rooms[room_code].add(request.sid)
+    send(f"{username} has joined the room: {room_code}.", to=room_code)
 
 @socketio.on('leave_room')
 def handle_leave_room(data):
-    try:
-        leave_room(data['room'])
-        send(f"{session['username']} has left the room.", room=data['room'])
+    room_code = data['room']
+    username = data['username']
 
-        # Check if the room is empty
-        room = Room.query.filter_by(code=data['room']).first()
-        if room and not socketio.server.rooms(data['room']):  # Check if the room is empty
-            # Delete the room from the database
-            db.session.delete(room)
-            db.session.commit()
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    if room_code in active_rooms and request.sid in active_rooms[room_code]:
+        leave_room(room_code)
+        active_rooms[room_code].remove(request.sid)
+        send(f"{username} has left the room: {room_code}.", room=room_code)
+
+        if not active_rooms[room_code]:
+            del active_rooms[room_code]
 
 @socketio.on('send_message')
 def handle_send_message(data):
-    room_code = data['room']
+    room = data['room']
+    message = data['message'] # test 
     sid = request.sid
-    # message = Message(content=data['message'], user_id=sid, room_id=room_code)
-    # db.session.add(message)
-    # db.session.commit()
-    emit('receive_message', data, room=room_code)
+    data['sid'] = sid
+    
+    print(f'room: {room}') # DEBUG
+    print(f'message: {message}') # DEBUG
+    print(f'sid: {sid}') # DEBUG
+    
+    print(f'Emitting receive_message in {room}')  # DEBUG
+    emit('receive_message', data, room=room)
 
 drawingState = []
 @socketio.on('lineDraw')

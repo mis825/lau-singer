@@ -1,94 +1,69 @@
-# Server Routes Documentation
+# API Documentation
 
-## Create User
-- **Route:** POST `/api/create-user`
-- **Description:** Creates a new user.
+## Register User
+- **Route:** POST `/register`
+- **Description:** Registers a new user.
 - **Request Body:**
   - JSON Object:
-    - `name`: Name of the user.
+    - `username`: Username of the user.
 - **Response:**
   - JSON Object:
     - `message`: Success or error message.
 - **Status Codes:**
-  - `200`: Successful operation.
-  - `400`: User name not provided.
+  - `201`: Successful operation, user registered.
+  - `400`: Username already taken.
 
-## Delete User
-- **Route:** DELETE `/api/delete-user`
-- **Description:** Deletes a user.
+## Login User
+- **Route:** POST `/login`
+- **Description:** Logs in a user.
 - **Request Body:**
   - JSON Object:
-    - `name`: Name of the user to be deleted.
+    - `username`: Username of the user.
 - **Response:**
   - JSON Object:
     - `message`: Success or error message.
 - **Status Codes:**
-  - `200`: Successful operation.
-  - `400`: User name not provided.
+  - `200`: Successful operation, user logged in.
+  - `401`: Invalid username.
 
-## Get User
-- **Route:** GET `/api/get-user`
-- **Description:** Retrieves user information.
-- **Query Parameters:**
-  - `name`: Name of the user (optional).
-  - `id`: ID of the user (optional).
+## Get Rooms
+- **Route:** GET `/api/get-rooms`
+- **Description:** Gets a list of active rooms.
 - **Response:**
-  - JSON Object:
-    - User information.
+  - JSON Array:
+    - List of room codes.
 - **Status Codes:**
   - `200`: Successful operation.
-  - `400`: User ID or name not provided.
-
-## Create Room
-- **Route:** POST `/api/create-room`
-- **Description:** Creates a new room.
-- **Request Body:**
-  - JSON Object (Optional):
-    - `name`: Name of the room (default: unique room ID).
-    - `max_users`: Maximum number of users allowed in the room (default: 8).
-- **Response:**
-  - JSON Object:
-    - `message`: Success or error message.
-- **Status Codes:**
-  - `200`: Successful operation.
-
-## Delete Room
-- **Route:** DELETE `/api/delete-room`
-- **Description:** Deletes a room.
-- **Request Body:**
-  - JSON Object:
-    - `room_id`: ID of the room to be deleted.
-- **Response:**
-  - JSON Object:
-    - `message`: Success or error message.
-- **Status Codes:**
-  - `200`: Successful operation.
-  - `400`: Room ID is required.
 
 ## Join Room
-- **Route:** POST `/api/join-room`
-- **Description:** Adds a user to a room.
-- **Request Body:**
-  - JSON Object:
-    - `user_id`: ID of the user to join the room.
-    - `room_id`: ID of the room to join.
+- **Route:** GET `/join/<room_code>`
+- **Description:** Joins a room identified by its code.
 - **Response:**
   - JSON Object:
     - `message`: Success or error message.
 - **Status Codes:**
-  - `200`: Successful operation.
-  - `400`: Missing user_id or room_id.
+  - `200`: Successful operation, room joined.
+  - `404`: Room not found.
 
-## Leave Room
-- **Route:** POST `/api/leave-room`
-- **Description:** Removes a user from a room.
-- **Request Body:**
-  - JSON Object:
-    - `user_id`: ID of the user to leave the room.
-    - `room_id`: ID of the room to leave.
+## Room Page
+- **Route:** GET `/room/<room_code>`
+- **Description:** Gets information about a room identified by its code.
 - **Response:**
   - JSON Object:
     - `message`: Success or error message.
 - **Status Codes:**
   - `200`: Successful operation.
-  - `400`: Missing user_id or room_id.
+  - `404`: Room not found.
+
+## Delete Room
+- **Route:** DELETE `/room/<room_code>`
+- **Description:** Deletes a room identified by its code.
+- **Query Parameters:**
+  - `username`: Username of the user attempting to delete the room.
+- **Response:**
+  - JSON Object:
+    - `message`: Success or error message.
+- **Status Codes:**
+  - `200`: Successful operation, room deleted.
+  - `403`: Unauthorized operation, only the creator of the room can delete it.
+  - `404`: Room not found.
