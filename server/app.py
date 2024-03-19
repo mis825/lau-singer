@@ -221,6 +221,7 @@ def handle_leave_room(data):
         active_rooms[room_code].remove(request.sid)
         send(f"{username} has left the room: {room_code}.", room=room_code)
 
+        # check if the set of clients for this room is now empty
         if not active_rooms[room_code]:
             del active_rooms[room_code]
 
