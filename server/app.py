@@ -145,6 +145,10 @@ def delete_room(room_code):
 
     # Check if the current user is the creator of the room
     room_creator = get_room_creator(room_code)
+
+    print(f'room_creator: {room_creator}') # DEBUG
+    print(f'username: {username}') # DEBUG
+
     if username != room_creator:
         return jsonify({"message": "Only the creator of the room can delete it"}), 403
 
@@ -152,6 +156,15 @@ def delete_room(room_code):
     del active_rooms[room_code]
 
     return jsonify({"message": f"Room {room_code} deleted successfully"}), 200
+
+@app.route('/room/get-creator/<room_code>', methods=['GET'])
+def get_creator(room_code):
+    creator = get_room_creator(room_code)
+    print(f'creator: {creator}') # DEBUG
+    if creator is None:
+        return jsonify({"message": "Room not found"}), 404
+
+    return jsonify({"creator": creator}), 200
 
 def get_current_user():
     # get the username associated with the sid

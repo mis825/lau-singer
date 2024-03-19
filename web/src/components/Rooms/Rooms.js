@@ -8,7 +8,7 @@ import "./Rooms.css";
 
 function Rooms(props) {
   const [rooms, setRooms] = useState([0, 0, 0, 0]);
-  const [room, setRoom] = useState("")
+  const [roomKey, setRoomKey] = useState("")
   const [roomError, setRoomError] = useState("");
   const navigate = useNavigate();
   const socket = Socket.getSocket()
@@ -16,17 +16,17 @@ function Rooms(props) {
   const onButtonClick = () => {
     setRoomError("");
 
-    if ("" === room) {
+    if ("" === roomKey) {
       setRoomError("Please enter a room number");
       return;
     }
 
-    if (room.length < 5) {
+    if (roomKey.length < 5) {
       setRoomError("Please enter a 5-digit number")
       return;
     }
 
-    if (!parseInt(room)) {
+    if (!parseInt(roomKey)) {
       setRoomError("Please enter a 5-digit number")
       return;
     }
@@ -35,7 +35,7 @@ function Rooms(props) {
   };
 
   const createRoom = async () => {
-    socket.emit("join_room", { username: props.name, room: room });
+    socket.emit("join_room", { username: props.name, room: roomKey });
     await delay(150);
     refreshRooms();
   };
@@ -85,9 +85,9 @@ function Rooms(props) {
       </header>
       <div className={"inputContainer"}>
         <input
-          value={room}
+          value={roomKey}
           placeholder="Enter room number"
-          onChange={(ev) => setRoom(ev.target.value)}
+          onChange={(ev) => setRoomKey(ev.target.value)}
           className={"inputBox"}
         />
         <label className="errorLabel">{roomError}</label>

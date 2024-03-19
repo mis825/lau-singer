@@ -8,10 +8,12 @@ import Canvas from "../Canvas/Canvas";
 import CanvasProvider from "../../providers/CanvasProvider";
 // import GameContext from "../../contexts/GameContext";
 import Socket from "../../services/Socket";
+import Admin from "../Admin/Admin";
 
 const Game = (props) => {
   const navigate = useNavigate();
   const socket = Socket.getSocket();
+  const [host, setHost] = useState("");
 
   useEffect(() => {
     if (!props.loggedIn || !props.name) {
@@ -19,12 +21,41 @@ const Game = (props) => {
     }
   }, [props.loggedIn, navigate]);
 
+  // get host from /room/get-creator/<room_code>
+  useEffect(() => {
+    if (props.room) {
+      let url = new URL(`http://localhost:5000/room/get-creator/${props.room}`);
+      fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          setHost(data.creator);
+        });
+    }
+  }, [props.room, props.name]);
+
   return props.name && props.loggedIn ? (
     <div className="Game-container">
-      <CanvasProvider>
-          <Canvas width={800} height={600} />
+      <CanvasProvider room={props.room} host={host} name={props.name}>
+        <Canvas width={800} height={600} />
       </CanvasProvider>
-      <Chat name={props.name} loggedIn={props.loggedIn} room={props.room} socket={socket} />
+      <Chat
+        name={props.name}
+        loggedIn={props.loggedIn}
+        room={props.room}
+        socket={socket}
+        host={host}
+      />
+      <Admin
+        name={props.name}
+        loggedIn={props.loggedIn}
+        room={props.room}
+        socket={socket}
+      />
     </div>
   ) : (
     <div className="Game-container"></div>

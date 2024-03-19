@@ -4,6 +4,7 @@
     --color-chat-button-hover: #5e5ebd;
     --color-scrollbar: #999;
     --color-scrollbar-hover: #777;
+    --color-chat-host: #be5be9;
 }
 
 @supports (font-variation-settings: normal) {
@@ -94,6 +95,11 @@
 .chat-username {
     font-weight: bold;
     color: var(--color-username);
+}
+
+.chat-host {
+    font-weight: bold;
+    color: var(--color-chat-host);
 }
 
 ::-webkit-scrollbar {

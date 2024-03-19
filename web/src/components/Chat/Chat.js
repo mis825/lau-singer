@@ -22,7 +22,7 @@ const Chat = (props) => {
       socket.on("receive_message", (message) => {
         setMessages((messages) => [
           ...messages,
-          { username: message.username, message: message.msg },
+          { username: message.username, message: message.message },
         ]);
       });
 
@@ -54,7 +54,7 @@ const Chat = (props) => {
     if (message && props.name && props.loggedIn) {
       socket.emit(
         "send_message",
-        { username: props.name, msg: message, room: props.room },
+        { username: props.name, message: message, room: props.room },
         () => setMessage("")
       );
     }
@@ -70,7 +70,11 @@ const Chat = (props) => {
           <ul className="chat-messages" ref={messageList}>
             {messages.map((msg, index) => (
               <li key={index}>
-                <span className="chat-username">{msg.username}: </span>
+                {props.host === msg.username ? (
+                  <span className="chat-host">{msg.username}: </span>
+                ) : (
+                  <span className="chat-username">{msg.username}: </span>
+                )}
                 {msg.message}
               </li>
             ))}
