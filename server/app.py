@@ -227,13 +227,16 @@ def handle_leave_room(data):
 @socketio.on('send_message')
 def handle_send_message(data):
     room = data['room']
-    message = data['message'] # test 
+    message = data['message'] 
+    timestamp = datetime.now().strftime('%H:%M:%S') # get the current time
     sid = request.sid
+    data['timestamp'] = timestamp
     data['sid'] = sid
     
     print(f'room: {room}') # DEBUG
     print(f'message: {message}') # DEBUG
     print(f'sid: {sid}') # DEBUG
+    print(f'timestamp: {timestamp}') # DEBUG
     
     print(f'Emitting receive_message in {room}')  # DEBUG
     emit('receive_message', data, room=room)

@@ -71,7 +71,7 @@ def test_send_message(sio, room, message):
     sio.emit('send_message', {'room': room, 'message': message})
     print(f'Message sent') # DEBUG
 
-    sio.sleep(5)
+    sio.sleep(2)
     # sio.disconnect()
     # print(f'Disconnected from {room}.')
 
@@ -85,7 +85,6 @@ if __name__ == "__main__":
         print('user2 joining the room...')
         sio2 = test_join_room('user2', room_1)
     print('\n')
-    
     active_rooms = test_get_rooms()
     
     print('Testing a client joining a different room...')
@@ -97,22 +96,20 @@ if __name__ == "__main__":
     active_rooms = test_get_rooms()
     print('\n')
 
-    print('Testing joining a room that does not exist...')
-    sio4 = test_join_room('user4', '123456')
+    # print('Testing joining a room that does not exist...')
+    # sio4 = test_join_room('user4', '123456')
+    # active_rooms = test_get_rooms()
     
-    active_rooms = test_get_rooms()
-    
-    # print('Testing sending messages in the rooms...')
-    # test_send_message(sio1, room_code, 'Hi!!!!')
-    # test_send_message(sio2, room_code, 'Bye!!!')
+    print('Testing sending messages in the rooms...')
+    test_send_message(sio1, room_1, 'Hi!!!!')
+    test_send_message(sio2, room_1, 'Bye!!!')
     
     # print('Testing deleting rooms...')
     # # shouldn't work because user2 is not the creator of room1
     # print('User2 trying to delete room1...should fail')
-    # test_delete_room('user2', room_code)
+    # test_delete_room('user2', room_1)
     # print('User1 deleting room1...should work')
-    # test_delete_room('user1', room_code)
+    # test_delete_room('user1', room_1)
     # print('\n')
-    
     # active_rooms = test_get_rooms()
 
