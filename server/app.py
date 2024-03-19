@@ -208,7 +208,8 @@ def handle_join_room(data):
         return
 
     join_room(room_code)
-    active_rooms[room_code].add(request.sid) # add the client to the set of clients for this room
+    # active_rooms[room_code].add(request.sid) # add the client to the set of clients for this room
+    active_rooms[room_code].add(username) # add the username to the set of clients for this room
     send(f"{username} has joined the room: {room_code}.", to=room_code)
 
 @socketio.on('leave_room')
@@ -216,9 +217,9 @@ def handle_leave_room(data):
     room_code = data['room']
     username = data['username']
 
-    if room_code in active_rooms and request.sid in active_rooms[room_code]:
+    if room_code in active_rooms and username in active_rooms[room_code]: # request.sid 
         leave_room(room_code)
-        active_rooms[room_code].remove(request.sid)
+        active_rooms[room_code].remove(username)
         send(f"{username} has left the room: {room_code}.", room=room_code)
 
         # check if the set of clients for this room is now empty
@@ -241,6 +242,31 @@ def handle_send_message(data):
     
     print(f'Emitting receive_message in {room}')  # DEBUG
     emit('receive_message', data, room=room)
+    
+@socketio.on('switch_admin')
+def handle_switch_admin(data):
+    room_code = data['room']
+    old_admin_username = data['old_admin']
+    new_admin_username = data['new_admin']
+
+    # Check if the room exists
+    if room_code not in active_rooms:
+        emit('switch_admin_error', {'error': 'Room not found'})
+        return
+
+    # Check if the new admin is in the room
+    if new_admin_username not in active_rooms[room_code]:
+        emit('switch_admin_error', {'error': 'New admin not found in the room'})
+        return
+    
+    # Check if the current user is the admin of the room
+    if old_admin_username != room_to_creator[room_code]:
+        emit('switch_admin_error', {'error': 'Only the admin can switch admin rights'})
+        return
+
+    # Switch the admin rights to the new admin
+    room_to_creator[room_code] = new_admin_username
+    emit('switch_admin_success', {'message': f'Admin rights for room {room_code} have been switched to {new_admin_username}'})
 
 if __name__ == "__main__":
     with app.app_context():
