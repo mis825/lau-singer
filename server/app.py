@@ -105,6 +105,17 @@ def login():
 def get_rooms():
     return jsonify(list(active_rooms.keys())), 200
 
+@app.route('/create-room', methods=['POST'])
+def create_room():
+    username = request.json['username']
+    room_code = generate_room_code()
+    active_rooms[room_code] = set() # add the room code to the active_rooms dictionary, with an empty set of clients
+    # Store the username of the creator with the room code when the room is created
+    room_to_creator[room_code] = username
+    if room_code is None:
+        return jsonify({"message": "Error creating room"}), 500
+    return jsonify({"room_code": room_code}), 201
+
 @app.route('/join/<room_code>', methods=['GET'])
 def join_room_by_code(room_code):
     # handle the client connections here, just use the join_room function in sio
@@ -193,14 +204,11 @@ def handle_join_room(data):
 
     # check if the room exists in active_rooms
     if room_code not in active_rooms:
-        # the room does not exist, so create a new one
-        room_code = generate_room_code()  # this function will always return a unique room code
-        active_rooms[room_code] = set()
-        # Store the username of the creator with the room code when the room is created
-        room_to_creator[room_code] = username
+        emit('join_room_error', {'error': 'Room not found'}) # emit a custom event with error message to the client
+        return
 
     join_room(room_code)
-    active_rooms[room_code].add(request.sid)
+    active_rooms[room_code].add(request.sid) # add the client to the set of clients for this room
     send(f"{username} has joined the room: {room_code}.", to=room_code)
 
 @socketio.on('leave_room')
