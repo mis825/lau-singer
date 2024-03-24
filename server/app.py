@@ -254,8 +254,13 @@ def line_drawn(data):
 @socketio.on('clearCanvas')
 def clear_canvas(data):
     room_code = data['room']
+    name = data['name']
+
+    if name != get_room_creator(room_code):
+        print("Only the creator of the room can clear the canvas")
+        return
+
     drawingState.clear()
-    # print(drawingState)
     emit('clearCanvas', room=room_code)
 
 @socketio.on('drawingState')

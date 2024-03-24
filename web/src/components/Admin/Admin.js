@@ -6,24 +6,14 @@ import Socket from "../../services/Socket";
 import "./Admin.css";
 
 const Admin = (props) => {
-  // allow the admin to clear the canvas, delete the room
   const socket = Socket.getSocket();
 
   const clearCanvas = () => {
-    socket.emit("clearCanvas", { room: props.room });
+    socket.emit("clearCanvas", { room: props.room, name: props.name});
   };
 
-  /**
-     * @app.route('/room/<room_code>', methods=['DELETE'])
-def delete_room(room_code):
-    # Get the username from the query parameters
-    username = request.args.get('username')
-
-    # Check if the room exists in active_rooms
-
-     */
 const deleteRoom = () => {
-        console.log("propsname: ", props.name);
+        // console.log("propsname: ", props.name);
         let url = new URL(`http://localhost:5000/room/${props.room}`);
         url.searchParams.append('username', props.name);
 
