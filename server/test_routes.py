@@ -1,4 +1,5 @@
 import requests
+import time
 from socketio import Client
 
 def test_join_room(username, room):
@@ -15,15 +16,36 @@ def test_join_room(username, room):
     @sio.on('receive_message')
     def on_receive_message(data, room=room):
         print(f'Received message in {room}: {data}\n')
+        
+    @sio.on('join_room_error')
+    def on_join_room_error(data):
+        print(f"Error while joining room: {data['error']}")
 
     try:
         sio.connect('http://localhost:5000')
         sio.emit('join_room', {'room': room, 'username': username})
+        print(f'{username} joined room {room}') # DEBUG
     except Exception as e:
         print(f"Error while connecting or joining room: {e}")
         return None
 
     return sio  # Return the client so it can be disconnected later
+
+def test_leave_room(sio, username, room):
+    print(f'{username} leaving room {room}') # DEBUG
+    sio.emit('leave_room', {'room': room, 'username': username})
+    print(f'{username} left room {room}') # DEBUG
+
+def test_create_room(username):
+    print(f'{username} creating room...')
+    response = requests.post('http://localhost:5000/create-room', json={'username': username})
+    if response.status_code == 201:
+        room_code = response.json()['room_code']
+        print(f'Room {room_code} created successfully by {username}')
+        return room_code
+    else:
+        print(f'Error creating room: {response.status_code}')
+        return None
 
 def test_delete_room(username, room_code):
     # username is a query parameter 
@@ -47,55 +69,182 @@ def test_join_route(username, room_code):
     response = requests.get(f'http://localhost:5000/join/{room_code}')
     if response.status_code == 200:
         print(f'{username} joined room {room_code}')
+        return 200
     elif response.status_code == 404:
         print(f'Room {room_code} not found')
+        return 404
     else:
         print(f'Error joining room {room_code}: {response.status_code}')
-
+        return None 
 def test_send_message(sio, room, message):
     print(f'Sending message in {room}') # DEBUG
     sio.emit('send_message', {'room': room, 'message': message})
     print(f'Message sent') # DEBUG
+    sio.sleep(2)
+    
+def test_create_and_join_room(user1: str, user2: str) -> bool:
+    print('Testing creating a room and joining it...')
+    print('---------------------------------')
+    room_1 = test_create_room(user1)
+    if room_1 is not None:
+        sio1 = test_join_room(user1, room_1)
+        sio2 = test_join_room(user2, room_1)
+        return sio1 is not None and sio2 is not None
+    return False
 
-    sio.sleep(5)
-    # sio.disconnect()
-    # print(f'Disconnected from {room}.')
+def test_join_different_room(username: str) -> bool:
+    print('Testing joining a different room...')
+    print('---------------------------------')
+    room_2 = test_create_room(username)
+    if room_2 is not None:
+        sio3 = test_join_room(username, room_2)
+        return sio3 is not None
+    return False
+
+def test_join_nonexistent_room(username: str, room_code: str) -> bool:
+    print('Testing joining a room that does not exist...')
+    print('---------------------------------')
+    sio = test_join_room(username, room_code)
+    
+def test_send_messages(username: str) -> bool:
+    print('Testing sending messages in room...')
+    print('---------------------------------')
+    room_1 = test_create_room(username)
+    if room_1 is not None:
+        sio1 = test_join_room(username, room_1)
+        test_send_message(sio1, room_1, 'Hi!!!!')
+        test_send_message(sio1, room_1, 'Bye!!!')
+        return True
+    return False
+
+def test_user_delete_room(user1: str,  user2: str) -> bool:
+    print('Testing deleting a room...')
+    print('---------------------------------')
+    room1 = test_create_room(user1)
+    if room1 is not None:
+        sio1 = test_join_room(user1, room1)
+        sio2 = test_join_room(user2, room1)
+        print('user2 trying to delete room1...should fail')
+        test_delete_room(user2, room1) 
+        print('user1 deleting room1...should work')
+        test_delete_room(user1, room1) 
+        return True
+    return False
+    
+def test_destroy_empty_rooms_if_empty(username: str) -> bool: 
+    print('Testing that empty rooms will be destroyed if all users leave the room...')
+    print('---------------------------------')
+    
+    # Create a room
+    room_code = test_create_room(username)
+    
+    # Join the room
+    sio1 = test_join_room(username, room_code)
+    
+    # Leave the room
+    test_leave_room(sio1, username, room_code)
+
+    # Check if the room still exists
+    active_rooms = test_get_rooms()
+    if room_code in active_rooms:
+        print(f'Room {room_code} still exists')
+        return False
+    else:
+        print(f'Room {room_code} has been destroyed')
+        return True
+          
+def test_destroy_rooms_if_not_empty(user1: str, user2: str, user3: str) -> bool:
+    print('Testing that empty rooms will not be destroyed if only some users leave the room...')
+    print('---------------------------------')
+    
+    # Create a room
+    room_code = test_create_room(user1)
+    
+    # Join the room
+    sio1 = test_join_room(user1, room_code)
+    sio2 = test_join_room(user2, room_code)
+    sio3 = test_join_room(user3, room_code)
+    
+    # Leave the room
+    test_leave_room(sio1, user1, room_code)
+    test_leave_room(sio2, user2, room_code)
+    
+    # Check if the room still exists
+    active_rooms = test_get_rooms()
+    if room_code in active_rooms:
+        print(f'Room {room_code} still exists')
+        return True
+    else:
+        print(f'Room {room_code} has been destroyed')
+        return False
+
+def test_switch_admin(old_admin, new_admin):
+    # Create a room
+    room_code = test_create_room(old_admin)
+    test_get_rooms()
+    if room_code is not None: 
+        # Join the room
+        sio_old_admin = test_join_room(old_admin, room_code)
+        test_join_room(new_admin, room_code)
+        
+        @sio_old_admin.on('switch_admin_error')
+        def on_switch_admin_error(data):
+            print(f"Switch admin error: {data['error']}")
+            
+        @sio_old_admin.on('switch_admin_success')
+        def on_switch_admin_success(data):
+            print(data['message'])
+        
+        # Test if new admin can delete the room before the switch
+        print(f'{new_admin} trying to delete room {room_code}...should fail')
+        test_delete_room(new_admin, room_code) # Should fail
+        
+        # Switch the admin from old_admin to new_admin
+        print(f'Switching admin rights from {old_admin} to {new_admin}...')
+        # wait for the server to emit the switch_admin event
+        sio_old_admin.sleep(3)
+        sio_old_admin.emit('switch_admin', {'room': room_code, 'old_admin': old_admin, 'new_admin': new_admin})
+        sio_old_admin.sleep(3)
+        print(f'Admin switched')
+        
+        # Test if old admin can delete the room after the switch
+        print(f'{old_admin} trying to delete room {room_code}...should fail')
+        test_delete_room(old_admin, room_code) # Should fail
+        
+        # Test if new admin can delete the room after the switch
+        print(f'{new_admin} trying to delete room {room_code}...should work')
+        test_delete_room(new_admin, room_code) # Should work
+             
+        return True
 
 if __name__ == "__main__":
-    print('Testing two clients joining the same room...')
-    sio1=test_join_room('user1', 'random_room')
+    assert test_create_and_join_room(user1='user1', user2='user2') == True
     active_rooms = test_get_rooms()
-    first_room_code = active_rooms[0]
-    print('First room code:', first_room_code) # DEBUG
-    sio2=test_join_room('user2', first_room_code)
     print('\n')
     
-    print('Testing a client joining a different room...')
-    sio3=test_join_room('user3', 'another_room')
+    assert test_join_route(username='join_route_200', room_code=active_rooms[0]) == 200 
+    assert test_join_route(username='join_route_404', room_code='1234') == 404
+    
+    assert test_join_different_room(username='user3') == True
     active_rooms = test_get_rooms()
-    second_room_code = active_rooms[1]
     print('\n')
 
-    print('Testing multiple clients joining different rooms...')
-    # More users join the rooms that the initial 3 users created
-    for i, room_code in enumerate(active_rooms, 5):
-        test_join_route(f'user{i}', room_code)
-    print('\n')
-    
+    assert test_join_nonexistent_room(username='user4', room_code='1234') == None
     active_rooms = test_get_rooms()
     print('\n')
     
-    print('Testing sending messages in the rooms...')
-    test_send_message(sio1, first_room_code, 'Hi!!!!')
-    test_send_message(sio2, first_room_code, 'Bye!!!')
-    
-    print('Testing deleting rooms...')
-    # shouldn't work because user2 is not the creator of room1
-    print('User2 trying to delete room1...should fail')
-    test_delete_room('user2', first_room_code)
-    print('User1 deleting room1...should work')
-    test_delete_room('user1', first_room_code)
+    assert test_send_messages(username='user1') == True
+    active_rooms = test_get_rooms()
     print('\n')
     
+    assert test_user_delete_room(user1='user1', user2='user2') == True
     active_rooms = test_get_rooms()
-
+    print('\n')
+    
+    assert test_destroy_empty_rooms_if_empty(username='user1') == True
+    print('\n')
+    assert test_destroy_rooms_if_not_empty(user1='user1', user2='user2', user3='user3') == True
+    print('\n')
+    
+    test_switch_admin(old_admin='old_admin', new_admin='new_admin')
+    test_get_rooms()

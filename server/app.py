@@ -105,6 +105,17 @@ def login():
 def get_rooms():
     return jsonify(list(active_rooms.keys())), 200
 
+@app.route('/create-room', methods=['POST'])
+def create_room():
+    username = request.json['username']
+    room_code = generate_room_code()
+    active_rooms[room_code] = set() # add the room code to the active_rooms dictionary, with an empty set of clients
+    # Store the username of the creator with the room code when the room is created
+    room_to_creator[room_code] = username
+    if room_code is None:
+        return jsonify({"message": "Error creating room"}), 500
+    return jsonify({"room_code": room_code}), 201
+
 @app.route('/join/<room_code>', methods=['GET'])
 def join_room_by_code(room_code):
     # handle the client connections here, just use the join_room function in sio
@@ -206,14 +217,12 @@ def handle_join_room(data):
 
     # check if the room exists in active_rooms
     if room_code not in active_rooms:
-        # the room does not exist, so create a new one
-        room_code = generate_room_code()  # this function will always return a unique room code
-        active_rooms[room_code] = set()
-        # Store the username of the creator with the room code when the room is created
-        room_to_creator[room_code] = username
+        emit('join_room_error', {'error': 'Room not found'}) # emit a custom event with error message to the client
+        return
 
     join_room(room_code)
-    active_rooms[room_code].add(request.sid)
+    # active_rooms[room_code].add(request.sid) # add the client to the set of clients for this room
+    active_rooms[room_code].add(username) # add the username to the set of clients for this room
     send(f"{username} has joined the room: {room_code}.", to=room_code)
 
 @socketio.on('leave_room')
@@ -221,27 +230,56 @@ def handle_leave_room(data):
     room_code = data['room']
     username = data['username']
 
-    if room_code in active_rooms and request.sid in active_rooms[room_code]:
+    if room_code in active_rooms and username in active_rooms[room_code]: # request.sid 
         leave_room(room_code)
-        active_rooms[room_code].remove(request.sid)
+        active_rooms[room_code].remove(username)
         send(f"{username} has left the room: {room_code}.", room=room_code)
 
+        # check if the set of clients for this room is now empty
         if not active_rooms[room_code]:
             del active_rooms[room_code]
 
 @socketio.on('send_message')
 def handle_send_message(data):
     room = data['room']
-    message = data['message'] # test 
+    message = data['message'] 
+    timestamp = datetime.now().strftime('%H:%M:%S') # get the current time
     sid = request.sid
+    data['timestamp'] = timestamp
     data['sid'] = sid
     
     print(f'room: {room}') # DEBUG
     print(f'message: {message}') # DEBUG
     print(f'sid: {sid}') # DEBUG
+    print(f'timestamp: {timestamp}') # DEBUG
     
     print(f'Emitting receive_message in {room}')  # DEBUG
     emit('receive_message', data, room=room)
+    
+@socketio.on('switch_admin')
+def handle_switch_admin(data):
+    room_code = data['room']
+    old_admin_username = data['old_admin']
+    new_admin_username = data['new_admin']
+
+    # Check if the room exists
+    if room_code not in active_rooms:
+        emit('switch_admin_error', {'error': 'Room not found'})
+        return
+
+    # Check if the new admin is in the room
+    if new_admin_username not in active_rooms[room_code]:
+        emit('switch_admin_error', {'error': 'New admin not found in the room'})
+        return
+    
+    # Check if the current user is the admin of the room
+    if old_admin_username != room_to_creator[room_code]:
+        emit('switch_admin_error', {'error': 'Only the admin can switch admin rights'})
+        return
+
+    # Switch the admin rights to the new admin
+    room_to_creator[room_code] = new_admin_username
+    emit('switch_admin_success', {'message': f'Admin rights for room {room_code} have been switched to {new_admin_username}'})
 
 drawingState = []
 @socketio.on('lineDraw')
