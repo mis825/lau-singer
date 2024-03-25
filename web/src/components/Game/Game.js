@@ -49,12 +49,15 @@ const Game = (props) => {
         room={props.room}
         socket={socket}
         host={host}
+        setHost={setHost}
       />
       <Admin
         name={props.name}
         loggedIn={props.loggedIn}
         room={props.room}
         socket={socket}
+        host={host}
+        setHost={setHost}
       />
     </div>
   ) : (

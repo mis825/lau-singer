@@ -16,4 +16,7 @@
     color: white;
     list-style-type: none;
 }
-  
+
+.roomLink {
+    cursor: pointer; 
+}

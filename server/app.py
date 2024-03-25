@@ -260,8 +260,17 @@ def handle_send_message(data):
 def handle_switch_admin(data):
     room_code = data['room']
     old_admin_username = data['old_admin']
-    new_admin_username = data['new_admin']
-
+    # new_admin_username = data['new_admin']
+    # get a list of all the clients in the room
+    clients = list(active_rooms[room_code])
+    # get the new admin username from the clients list
+    print("switching admin")
+    new_admin_username = old_admin_username
+    for client in clients:
+        if client != old_admin_username:
+            new_admin_username = client
+            break
+    print(f'new_admin_username: {new_admin_username}') # DEBUG
     # Check if the room exists
     if room_code not in active_rooms:
         emit('switch_admin_error', {'error': 'Room not found'})
@@ -279,7 +288,7 @@ def handle_switch_admin(data):
 
     # Switch the admin rights to the new admin
     room_to_creator[room_code] = new_admin_username
-    emit('switch_admin_success', {'message': f'Admin rights for room {room_code} have been switched to {new_admin_username}'})
+    emit('switch_admin_success', {'message': f'Admin rights for room {room_code} have been switched to {new_admin_username}', 'new_admin': new_admin_username}, room=room_code)
 
 drawingState = []
 @socketio.on('lineDraw')

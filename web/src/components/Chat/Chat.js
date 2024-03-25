@@ -12,6 +12,7 @@ const Chat = (props) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const socket = Socket.getSocket();
+  console.log("socket", socket);
 
   const messageList = useRef(null);
 
@@ -19,12 +20,30 @@ const Chat = (props) => {
     if (props.name && props.loggedIn) {
       socket.emit("join_room", { username: props.name, room: props.room });
 
+    socket.on("switch_admin_success", (data) => {
+      props.setHost(data.new_admin);
+    });
+    
       socket.on("receive_message", (message) => {
         setMessages((messages) => [
           ...messages,
-          { username: message.username, message: message.message },
+          {
+            username: message.username,
+            message: message.message,
+            timestamp: getTime(message.timestamp),
+          },
         ]);
       });
+
+      function getTime(timestamp) {
+        // timestamp is in format "18:23:59"
+        // we want to output time as "6:23"
+        const timeParts = timestamp.split(":");
+        const date = new Date();
+        date.setHours(timeParts[0]);
+        date.setMinutes(timeParts[1]);
+        return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit"});
+      }
 
       socket.on("leave_room", (message) => {
         setMessages((messages) => [
@@ -37,6 +56,7 @@ const Chat = (props) => {
       return () => {
         socket.off("message");
         socket.off("leave_room");
+        socket.off("switch_admin_success");
         socket.emit("leave_room", { username: props.name, room: props.room });
       };
     }
@@ -70,12 +90,14 @@ const Chat = (props) => {
           <ul className="chat-messages" ref={messageList}>
             {messages.map((msg, index) => (
               <li key={index}>
+                {/* <div className="chat-host-message"> */}
                 {props.host === msg.username ? (
                   <span className="chat-host">{msg.username}: </span>
                 ) : (
                   <span className="chat-username">{msg.username}: </span>
                 )}
                 {msg.message}
+                {<span className="chat-timestamp">  {msg.timestamp}</span>}
               </li>
             ))}
           </ul>

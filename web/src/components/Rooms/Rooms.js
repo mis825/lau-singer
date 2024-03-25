@@ -8,34 +8,55 @@ import "./Rooms.css";
 
 function Rooms(props) {
   const [rooms, setRooms] = useState([0, 0, 0, 0]);
-  const [roomKey, setRoomKey] = useState("")
+  const [roomKey, setRoomKey] = useState("");
   const [roomError, setRoomError] = useState("");
   const navigate = useNavigate();
-  const socket = Socket.getSocket()
+  const socket = Socket.getSocket();
 
   const onButtonClick = () => {
-    setRoomError("");
+    // setRoomError("");
 
-    if ("" === roomKey) {
-      setRoomError("Please enter a room number");
-      return;
-    }
+    // if ("" === roomKey) {
+    //   setRoomError("Please enter a room number");
+    //   return;
+    // }
 
-    if (roomKey.length < 5) {
-      setRoomError("Please enter a 5-digit number")
-      return;
-    }
+    // if (roomKey.length < 5) {
+    //   setRoomError("Please enter a 5-digit number");
+    //   return;
+    // }
 
-    if (!parseInt(roomKey)) {
-      setRoomError("Please enter a 5-digit number")
-      return;
-    }
+    // if (!parseInt(roomKey)) {
+    //   setRoomError("Please enter a 5-digit number");
+    //   return;
+    // }
 
     createRoom();
   };
 
   const createRoom = async () => {
-    socket.emit("join_room", { username: props.name, room: roomKey });
+    if (props.loggedIn) {
+      fetch("http://localhost:5000/create-room", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: props.name,
+        }),
+      }).then((response) => {
+        if (response.ok) {
+          response.json().then((data) => {
+            if (data.error) {
+              setRoomError(data.error);
+            } else {
+              props.setRoom(data.room_code);
+              navigate("/game");
+            }
+          });
+        }
+      });
+    }
     await delay(150);
     refreshRooms();
   };
@@ -47,7 +68,7 @@ function Rooms(props) {
   }, [props.loggedIn, navigate]);
 
   useEffect(() => {
-    refreshRooms()
+    refreshRooms();
   }, [props.loggedIn]);
 
   const refreshRooms = async () => {
@@ -61,11 +82,12 @@ function Rooms(props) {
         if (response.ok) {
           response.json().then((data) => {
             setRooms(data);
+            console.log(data);
           });
         }
       });
     }
-  }
+  };
 
   if (!props.loggedIn) {
     return (
@@ -84,25 +106,32 @@ function Rooms(props) {
         <h1>Battle Rooms</h1>
       </header>
       <div className={"inputContainer"}>
-        <input
+        {/* <input
           value={roomKey}
           placeholder="Enter room number"
           onChange={(ev) => setRoomKey(ev.target.value)}
           className={"inputBox"}
         />
-        <label className="errorLabel">{roomError}</label>
+        <label className="errorLabel">{roomError}</label> */}
         <input
           className={"inputButton"}
           type="button"
           onClick={onButtonClick}
-          value={"Enter"}
-          />
+          value={"Create Room"}
+        />
+
+        <input
+          className={"inputButton"}
+          type="button"
+          onClick={refreshRooms}
+          value={"Refresh Rooms"}
+        />
       </div>
       <ul className="roomList">
         {rooms.map((room, index) => {
           return (
             <li key={index}>
-              <a
+              <a className="roomLink"
                 onClick={() => {
                   props.setRoom(room);
                   navigate("/game");
