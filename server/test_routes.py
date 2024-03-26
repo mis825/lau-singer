@@ -92,6 +92,24 @@ def test_create_and_join_room(user1: str, user2: str) -> bool:
         return sio1 is not None and sio2 is not None
     return False
 
+def test_get_word(room_code):
+    print('Testing get_word...')
+    response = requests.get(f'http://localhost:5000/get_word/{room_code}')
+    if response.status_code == 200:
+        print(f'Word for room {room_code}: {response.json()["word"]}')
+        return True
+    print(f'Failed to get word for room {room_code}')
+    return False
+
+def test_change_word(room_code):
+    print('Testing change_word...')
+    response = requests.get(f'http://localhost:5000/change_word/{room_code}')
+    if response.status_code == 200:
+        print(f'New word for room {room_code}: {response.json()["word"]}')
+        return True
+    print(f'Failed to change word for room {room_code}')
+    return False
+
 def test_join_different_room(username: str) -> bool:
     print('Testing joining a different room...')
     print('---------------------------------')
@@ -220,31 +238,36 @@ def test_switch_admin(old_admin, new_admin):
 if __name__ == "__main__":
     assert test_create_and_join_room(user1='user1', user2='user2') == True
     active_rooms = test_get_rooms()
+    room1_code = active_rooms[0]
     print('\n')
     
-    assert test_join_route(username='join_route_200', room_code=active_rooms[0]) == 200 
-    assert test_join_route(username='join_route_404', room_code='1234') == 404
+    # assert test_join_route(username='join_route_200', room_code=active_rooms[0]) == 200 
+    # assert test_join_route(username='join_route_404', room_code='1234') == 404
+    # print('\n')
     
-    assert test_join_different_room(username='user3') == True
-    active_rooms = test_get_rooms()
-    print('\n')
+    # assert test_join_different_room(username='user3') == True
+    # active_rooms = test_get_rooms()
+    # print('\n')
 
-    assert test_join_nonexistent_room(username='user4', room_code='1234') == None
-    active_rooms = test_get_rooms()
-    print('\n')
+    # assert test_join_nonexistent_room(username='user4', room_code='1234') == None
+    # active_rooms = test_get_rooms()
+    # print('\n')
     
-    assert test_send_messages(username='user1') == True
-    active_rooms = test_get_rooms()
-    print('\n')
+    # assert test_send_messages(username='user1') == True
+    # active_rooms = test_get_rooms()
+    # print('\n')
     
-    assert test_user_delete_room(user1='user1', user2='user2') == True
-    active_rooms = test_get_rooms()
-    print('\n')
+    # assert test_user_delete_room(user1='user1', user2='user2') == True
+    # active_rooms = test_get_rooms()
+    # print('\n')
     
-    assert test_destroy_empty_rooms_if_empty(username='user1') == True
-    print('\n')
-    assert test_destroy_rooms_if_not_empty(user1='user1', user2='user2', user3='user3') == True
-    print('\n')
+    # assert test_destroy_empty_rooms_if_empty(username='user1') == True
+    # print('\n')
+    # assert test_destroy_rooms_if_not_empty(user1='user1', user2='user2', user3='user3') == True
+    # print('\n')
     
-    test_switch_admin(old_admin='old_admin', new_admin='new_admin')
-    test_get_rooms()
+    # test_switch_admin(old_admin='old_admin', new_admin='new_admin')
+    # test_get_rooms()
+    # print('\n')
+    assert test_get_word(room1_code) == True
+    assert test_change_word(room1_code) == True

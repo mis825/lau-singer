@@ -1,6 +1,7 @@
 import os 
 import logging 
 import random
+from collections import defaultdict
 from datetime import datetime
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, redirect, url_for, session
@@ -33,6 +34,10 @@ active_rooms = {}
 sid_to_username = {}
 # Global dictionary to store room code-creator mapping
 room_to_creator = {}
+# Global disctionary to store the current word for each room
+room_words = {}
+# Global dictionary to store the used words for each room
+room_used_words = defaultdict(set)
 
 # User Table
 class User(db.Model):
@@ -163,6 +168,44 @@ def delete_room(room_code):
     del active_rooms[room_code]
 
     return jsonify({"message": f"Room {room_code} deleted successfully"}), 200
+
+@app.route('/get_word/<room_code>', methods=['GET'])
+def get_word(room_code):
+    # If the room doesn't have a current word, assign one
+    if room_code not in room_words:
+        with open('words.txt', 'r') as f:
+            words = f.read().splitlines()
+        room_words[room_code] = random.choice(words)
+        
+    # Return the current word for the room
+    return jsonify({'word': room_words[room_code]})
+
+@app.route('/change_word/<room_code>', methods=['GET'])
+def change_word(room_code):
+    # Get the current word for the room
+    current_word = room_words.get(room_code)
+
+    # Add the current word to the set of used words for the room
+    if current_word:
+        room_used_words[room_code].add(current_word)
+
+    # Choose a new word for the room
+    with open('words.txt', 'r') as f:
+        words = set(f.read().splitlines())
+
+    # Remove the used words from the set of words
+    words -= room_used_words[room_code]
+
+    # If there are no other words, return an error
+    if not words:
+        return jsonify({'error': 'No other words available'}), 400
+
+    # Choose a new word
+    new_word = random.choice(list(words))
+    room_words[room_code] = new_word
+
+    # Return the new word for the room
+    return jsonify({'word': new_word})
 
 def get_current_user():
     # get the username associated with the sid
