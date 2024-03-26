@@ -110,6 +110,49 @@ def test_change_word(room_code):
     print(f'Failed to change word for room {room_code}')
     return False
 
+def test_assign_artist(room_code, username):
+    response = requests.post(f'http://localhost:5000/assign_artist/{room_code}/{username}')
+    if response.status_code == 200:
+        print(f'Artist for room {room_code} assigned to {username}')
+        return True
+    elif response.status_code == 404:
+        print(f'Room {room_code} not found')
+    elif response.status_code == 403:
+        print(f'User {username} not found')
+    else:
+        print(f'Failed to assign artist for room {room_code} to {username}')
+    return False
+
+def test_rotate_artist(room_code):
+    print('Testing rotate_artist...')
+    response = requests.post(f'http://localhost:5000/rotate_artist/{room_code}')
+    if response.status_code == 200:
+        print(f'Artist for room {room_code} rotated')
+        return True
+    print(f'Failed to rotate artist for room {room_code}')
+    return False
+
+def test_assign_guesser(room_code, username):
+    response = requests.post(f'http://localhost:5000/assign_guesser/{room_code}/{username}')
+    if response.status_code == 200:
+        print(f'Guesser for room {room_code} assigned to {username}')
+        return True
+    elif response.status_code == 404:
+        print(f'Room {room_code} not found')
+    else:
+        print(f'Failed to assign guesser for room {room_code} to {username}')
+    return False
+
+def test_display_roles(room_code):
+    print('Testing display_roles...')
+    response = requests.get(f'http://localhost:5000/display_roles/{room_code}')
+    print(response.json())
+    if response.status_code == 200:
+        print(f'Roles for room {room_code} displayed')
+        return True
+    print(f'Failed to display roles for room {room_code}')
+    return False
+
 def test_join_different_room(username: str) -> bool:
     print('Testing joining a different room...')
     print('---------------------------------')
@@ -239,7 +282,33 @@ if __name__ == "__main__":
     assert test_create_and_join_room(user1='user1', user2='user2') == True
     active_rooms = test_get_rooms()
     room1_code = active_rooms[0]
+    sio3 = test_join_room(username='user3', room=room1_code)
+    sio4 = test_join_room(username='user4', room=room1_code)
+    sio5 = test_join_room(username='user5', room=room1_code)
     print('\n')
+    
+    assert test_display_roles(room_code=room1_code) == True
+    assert test_rotate_artist(room_code=room1_code) == True
+    test_display_roles(room_code=room1_code)
+    assert test_rotate_artist(room_code=room1_code) == True
+    test_display_roles(room_code=room1_code)
+      
+    assert test_assign_artist(room_code=room1_code, username='user888') == False
+    assert test_assign_artist(room_code='1234', username='user2') == False
+    assert test_assign_artist(room_code=room1_code, username='user1') == True
+    
+    test_display_roles(room_code=room1_code)
+    
+    assert test_get_word(room_code=room1_code) == True
+    assert test_change_word(room_code=room1_code) == True
+
+    # print('Testing assign_guesser...')
+    # assert test_assign_guesser(room_code=room1_code, username='random_user2') == True
+    
+    # test_display_roles(room_code=room1_code)
+    
+    # assert test_assign_artist(room_code='1234', username='user2') == False
+    # assert test_assign_artist(room_code=room1_code, username='user888') == False
     
     # assert test_join_route(username='join_route_200', room_code=active_rooms[0]) == 200 
     # assert test_join_route(username='join_route_404', room_code='1234') == 404
@@ -269,5 +338,6 @@ if __name__ == "__main__":
     # test_switch_admin(old_admin='old_admin', new_admin='new_admin')
     # test_get_rooms()
     # print('\n')
-    assert test_get_word(room1_code) == True
-    assert test_change_word(room1_code) == True
+
+
+    
