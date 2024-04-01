@@ -22,6 +22,7 @@ const Chat = (props) => {
 
     socket.on("switch_admin_success", (data) => {
       props.setHost(data.new_admin);
+      props.setWord("");
     });
     
       socket.on("receive_message", (message) => {

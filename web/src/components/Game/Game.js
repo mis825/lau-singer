@@ -5,6 +5,7 @@ import "./Game.css";
 // import Draw from "../Draw/Draw";
 import Chat from "../Chat/Chat";
 import Canvas from "../Canvas/Canvas";
+import Menu from "../Canvas/Menu";
 import CanvasProvider from "../../providers/CanvasProvider";
 // import GameContext from "../../contexts/GameContext";
 import Socket from "../../services/Socket";
@@ -14,6 +15,7 @@ const Game = (props) => {
   const navigate = useNavigate();
   const socket = Socket.getSocket();
   const [host, setHost] = useState("");
+  const [word, setWord] = useState("");
 
   useEffect(() => {
     if (!props.loggedIn || !props.name) {
@@ -41,16 +43,20 @@ const Game = (props) => {
   return props.name && props.loggedIn ? (
     <div className="Game-container">
       <CanvasProvider room={props.room} host={host} name={props.name}>
+        <Menu word={word} />
         <Canvas width={800} height={600} />
-      </CanvasProvider>
-      <Chat
+        <Chat
         name={props.name}
         loggedIn={props.loggedIn}
         room={props.room}
         socket={socket}
         host={host}
         setHost={setHost}
+        word={word}
+        setWord={setWord}
       />
+      </CanvasProvider>
+      
       <Admin
         name={props.name}
         loggedIn={props.loggedIn}
@@ -58,6 +64,8 @@ const Game = (props) => {
         socket={socket}
         host={host}
         setHost={setHost}
+        word={word}
+        setWord={setWord}
       />
     </div>
   ) : (

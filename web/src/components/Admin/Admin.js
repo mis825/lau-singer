@@ -35,11 +35,28 @@ const Admin = (props) => {
     socket.emit("switch_admin", { room: props.room, old_admin: props.name });
   }
 
+  const getWord = () => {
+    if (props.name !== props.host) return;
+    
+    let url = new URL(`http://localhost:5000/get_word/${props.room}`);
+    fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        props.setWord(data.word);
+      });
+  }
+
   return (
     <div className="Admin-container">
       <button onClick={clearCanvas}>Clear Canvas</button>
       <button onClick={deleteRoom}>Delete Room</button>
       <button onClick={switchAdmin}>Rotate Admin</button>
+      <button onClick={getWord}>Get Word</button>
     </div>
   );
 };

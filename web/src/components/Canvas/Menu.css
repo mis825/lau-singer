@@ -1,0 +1,21 @@
+
+.Menu {
+    max-height: 80px;
+    padding: 0 20px;
+    background-color: var(--color-background-secondary);
+    color: var(--color-text);
+}
+
+.menu-word-header {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.word {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--drawWord);
+    border-radius: 5px;
+    border: 5px solid var(--drawWord);
+}

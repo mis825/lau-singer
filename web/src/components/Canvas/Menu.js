@@ -2,12 +2,15 @@
   
 import React from "react"; 
 import "./Canvas.css"; 
+import "./Menu.css";
   
-const Menu = ({ setLineColor, setLineWidth, 
-    setLineOpacity, clearCanvas }) => {
+const Menu = (/*{ setLineColor, setLineWidth, 
+    setLineOpacity, clearCanvas }*/props) => {
+
     return ( 
         <div className="Menu"> 
-            <label>Color </label> 
+            {props.word ? <h2 className="menu-word-header">Draw: <span className="word">{props.word}</span></h2> : null}
+            {/* <label>Color </label> 
             <input 
                 type="color"
                 onChange={(e) => { 
@@ -36,7 +39,7 @@ const Menu = ({ setLineColor, setLineWidth,
                 clearCanvas();
             }}> 
                 Clear
-            </button>
+            </button> */}
         </div> 
     ); 
 }; 

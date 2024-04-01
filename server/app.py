@@ -1,6 +1,7 @@
 import os 
 import logging 
 import random
+from collections import defaultdict
 from datetime import datetime
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, redirect, url_for, session
@@ -31,8 +32,15 @@ logger = logging.getLogger()
 active_rooms = {}
 # Global dictionary to store sid-username pairs
 sid_to_username = {}
-# Global dictionary to store room code-creator mapping
+# Global dictionary to store room code-creator, current artist and guesser mapping for each room
 room_to_creator = {}
+room_to_artist = {}
+room_to_guesser = defaultdict(list)
+room_to_potential_artists = defaultdict(list)
+# Global disctionary to store the current word for each room
+room_words = {}
+# Global dictionary to store the used words for each room
+room_used_words = defaultdict(set)
 
 # User Table
 class User(db.Model):
@@ -112,6 +120,8 @@ def create_room():
     active_rooms[room_code] = set() # add the room code to the active_rooms dictionary, with an empty set of clients
     # Store the username of the creator with the room code when the room is created
     room_to_creator[room_code] = username
+    # Assign the guesser role to the creator of the room
+    room_to_guesser[room_code] = [username]
     if room_code is None:
         return jsonify({"message": "Error creating room"}), 500
     return jsonify({"room_code": room_code}), 201
@@ -124,6 +134,20 @@ def join_room_by_code(room_code):
     #     print(type(key))
     #     break
     room_code_str = str(room_code)
+    
+    # Get the username of the user joining the room
+    username = request.args.get('username')
+    
+    # If the user is not the creator of the room, assign them a role
+    if username != room_to_creator[room_code_str]:
+        # If the room doesn't have an artist, assign the artist role to the user
+        if room_code_str not in room_to_artist:
+            assign_artist(room_code_str, username)
+            # also give the user the guesser role
+            assign_guesser(room_code_str, username)
+        # Otherwise, assign the guesser role to the user
+        else:
+            assign_guesser(room_code_str, username)
 
     if room_code_str not in active_rooms:
         return jsonify({"message": "Room not found"}), 404
@@ -176,6 +200,115 @@ def get_creator(room_code):
         return jsonify({"message": "Room not found"}), 404
 
     return jsonify({"creator": creator}), 200
+@app.route('/get_word/<room_code>', methods=['GET'])
+def get_word(room_code):
+    # If the room doesn't have a current word, assign one
+    if room_code not in room_words:
+        with open('words.txt', 'r') as f:
+            words = f.read().splitlines()
+        room_words[room_code] = random.choice(words)
+        
+    # Return the current word for the room
+    return jsonify({'word': room_words[room_code]})
+
+@app.route('/change_word/<room_code>', methods=['GET'])
+def change_word(room_code):
+    # Get the current word for the room
+    current_word = room_words.get(room_code)
+
+    # Add the current word to the set of used words for the room
+    if current_word:
+        room_used_words[room_code].add(current_word)
+
+    # Choose a new word for the room
+    with open('words.txt', 'r') as f:
+        words = set(f.read().splitlines())
+
+    # Remove the used words from the set of words
+    words -= room_used_words[room_code]
+
+    # If there are no other words, return an error
+    if not words:
+        return jsonify({'error': 'No other words available'}), 400
+
+    # Choose a new word
+    new_word = random.choice(list(words))
+    room_words[room_code] = new_word
+
+    # Return the new word for the room
+    return jsonify({'word': new_word})
+
+@app.route('/assign_artist/<room_code>/<username>', methods=['POST'])
+def assign_artist(room_code, username):
+    # Check if the room code exists
+    if room_code not in active_rooms:
+        return jsonify({'error': 'Room not found'}), 404
+    
+    # Check if the user exists in the room
+    if username not in active_rooms[room_code]:
+        return jsonify({'error': 'User not found in the room'}), 403
+    
+    # Assign the artist role to the user
+    room_to_artist[room_code] = username
+    return jsonify({'message': f'Artist for room {room_code} assigned to {username}'})
+
+@app.route('/rotate_artist/<room_code>', methods=['POST'])
+def rotate_artist(room_code):
+    # Check if the room exists
+    if room_code not in active_rooms:
+        return jsonify({'error': 'Room not found'}), 404
+
+    # Swap the old artist back to a guesser
+    old_artist = room_to_artist.get(room_code)
+    if old_artist:
+        room_to_guesser[room_code].append(old_artist)
+
+    # If there are no potential artists, refill the list with all users in the room
+    if not room_to_potential_artists[room_code]:
+        room_to_potential_artists[room_code] = list(active_rooms[room_code])
+
+    # Remove the old artist from the list of potential artists
+    if old_artist in room_to_potential_artists[room_code]:
+        room_to_potential_artists[room_code].remove(old_artist)
+
+    # Choose a new artist
+    new_artist = random.choice(room_to_potential_artists[room_code])
+
+    # Remove the new artist from the list of potential artists
+    room_to_potential_artists[room_code].remove(new_artist)
+
+    # Assign the artist role to the new artist
+    room_to_artist[room_code] = new_artist
+
+    return jsonify({'message': f'Artist for room {room_code} rotated to {new_artist}'})
+
+@app.route('/assign_guesser/<room_code>/<username>', methods=['POST'])
+def assign_guesser(room_code, username):
+    # Check if the room code exists
+    if room_code not in active_rooms:
+        return jsonify({'error': 'Room not found'}), 404
+    
+    # Assign the guesser role to the user
+    room_to_guesser[room_code].append(username)
+    return jsonify({'message': f'Guesser for room {room_code} assigned to {username}'})
+
+@app.route('/display_roles/<room_code>', methods=['GET'])
+def display_roles(room_code):
+    # Check if the room code exists
+    if room_code not in active_rooms:
+        return jsonify({'error': 'Room not found'}), 404
+
+    roles = {}
+    for user in active_rooms[room_code]:
+        user_roles = []
+        if user == room_to_creator.get(room_code):
+            user_roles.append('admin')
+        if user == room_to_artist.get(room_code):
+            user_roles.append('artist')
+        if user in room_to_guesser.get(room_code, []):
+            user_roles.append('guesser')
+        roles[user] = user_roles if user_roles else ['none']
+    return jsonify(roles)
 
 def get_current_user():
     # get the username associated with the sid
@@ -219,6 +352,16 @@ def handle_join_room(data):
     if room_code not in active_rooms:
         emit('join_room_error', {'error': 'Room not found'}) # emit a custom event with error message to the client
         return
+    
+    # If the user is not the creator of the room, assign them a role
+    if username != room_to_creator.get(room_code):
+        # If the room doesn't have an artist, assign the artist role to the user
+        if room_code not in room_to_artist:
+            assign_artist(room_code, username)
+            assign_guesser(room_code, username)
+        # Otherwise, assign the guesser role to the user
+        else:
+            assign_guesser(room_code, username)
 
     join_room(room_code)
     # active_rooms[room_code].add(request.sid) # add the client to the set of clients for this room
