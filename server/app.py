@@ -280,7 +280,43 @@ def rotate_artist(room_code):
     # Assign the artist role to the new artist
     room_to_artist[room_code] = new_artist
 
+    # Emit a message to the room with the new artist
+    # emit('new_artist', {'new_artist': new_artist}, room=room_code)
+
     return jsonify({'message': f'Artist for room {room_code} rotated to {new_artist}', 'new_artist': new_artist})
+
+@socketio.on('rotate_artist')
+def handle_rotate_artist(data):
+    room_code = data['room']
+    
+    # Check if the room exists
+    if room_code not in active_rooms:
+        return jsonify({'error': 'Room not found'}), 404
+
+    # Swap the old artist back to a guesser
+    old_artist = room_to_artist.get(room_code)
+    if old_artist:
+        room_to_guesser[room_code].append(old_artist)
+
+    # If there are no potential artists, refill the list with all users in the room
+    if not room_to_potential_artists[room_code]:
+        room_to_potential_artists[room_code] = list(active_rooms[room_code])
+
+    # Remove the old artist from the list of potential artists
+    if old_artist in room_to_potential_artists[room_code]:
+        room_to_potential_artists[room_code].remove(old_artist)
+
+    # Choose a new artist
+    new_artist = random.choice(room_to_potential_artists[room_code])
+
+    # Remove the new artist from the list of potential artists
+    room_to_potential_artists[room_code].remove(new_artist)
+
+    # Assign the artist role to the new artist
+    room_to_artist[room_code] = new_artist
+    print(f'new_artist: {new_artist}') # DEBUG
+    # Emit a message to the room with the new artist
+    emit('rotate_artist_success', {'new_artist': new_artist}, room=room_code)
 
 @app.route('/assign_guesser/<room_code>/<username>', methods=['POST'])
 def assign_guesser(room_code, username):
@@ -390,15 +426,62 @@ def handle_send_message(data):
     sid = request.sid
     data['timestamp'] = timestamp
     data['sid'] = sid
+
+    if room_to_artist.get(room) == data['username']:
+        print("Artist sent a message") # DEBUG
+        return
+
+    correct_guess = False
+    if room in room_words:
+        if message.lower() == room_words[room].lower():
+            correct_guess = True
+            guesser = data['username']
+            data['username'] = "Game"
+            data['message'] = f'{guesser} has guessed the word!'
+            emit('correct_guess', data, room=room)
+            room_used_words[room].add(room_words[room])
+            room_words.pop(room)
+            emit('clearCanvas', room=room)
+            handle_rotate_artist({'room': room})
+            
+    if not correct_guess:
+        emit('receive_message', data, room=room)
     
-    print(f'room: {room}') # DEBUG
-    print(f'message: {message}') # DEBUG
-    print(f'sid: {sid}') # DEBUG
-    print(f'timestamp: {timestamp}') # DEBUG
+    # print(f'room: {room}') # DEBUG
+    # print(f'message: {message}') # DEBUG
+    # print(f'sid: {sid}') # DEBUG
+    # print(f'timestamp: {timestamp}') # DEBUG
     
-    print(f'Emitting receive_message in {room}')  # DEBUG
-    emit('receive_message', data, room=room)
+    # print(f'Emitting receive_message in {room}')  # DEBUG
+    # emit('receive_message', data, room=room)
     
+@socketio.on('start_game')
+def handle_start_game(data):
+    room_code = data['room']
+    username = data['username']
+
+    if room_code not in active_rooms:
+        emit('start_game_error', {'error': 'Room not found'})
+        return
+
+    if username != room_to_creator[room_code]:
+        emit('start_game_error', {'error': 'Only the admin can start the game'})
+        return
+
+    if room_code not in room_to_artist:
+        emit('start_game_error', {'error': 'No artist assigned to the room'})
+        return
+
+    if room_code not in room_to_guesser:
+        emit('start_game_error', {'error': 'No guesser assigned to the room'})
+        return
+    
+    if len(active_rooms[room_code]) < 2:
+        emit('start_game_error', {'error': 'Need at least 2 players to start the game'})
+        return
+
+    emit('start_game_success', {'message': f'Game started for room {room_code}'}, room=room_code)
+
 @socketio.on('switch_admin')
 def handle_switch_admin(data):
     room_code = data['room']

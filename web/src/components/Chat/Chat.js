@@ -19,15 +19,17 @@ const Chat = (props) => {
     if (props.name && props.loggedIn) {
       socket.emit("join_room", { username: props.name, room: props.room });
 
-    socket.on("switch_admin_success", (data) => {
-      props.setHost(data.new_admin);
-      props.setWord("");
-    });
+      socket.on("switch_admin_success", (data) => {
+        props.setHost(data.new_admin);
+        props.setWord("");
+      });
 
-    socket.on("rotate_artist_success", (data) => {
-      props.setArtist(data.new_artist);
-    });
-    
+      socket.on("rotate_artist_success", (data) => {
+        console.log("new artist: ", data.new_artist);
+        props.setArtist(data.new_artist);
+        props.setWord("");
+      });
+
       socket.on("receive_message", (message) => {
         setMessages((messages) => [
           ...messages,
@@ -39,6 +41,25 @@ const Chat = (props) => {
         ]);
       });
 
+      socket.on("correct_guess", (message) => {
+        setMessages((messages) => [
+          ...messages,
+          {
+            username: message.username,
+            message: message.message,
+            timestamp: getTime(message.timestamp),
+          },
+        ]);
+
+        
+      });
+
+      socket.on("start_game_success", (data) => {
+        console.log(data.message)
+        props.setGameState("playing");
+      });
+                
+
       function getTime(timestamp) {
         // timestamp is in format "18:23:59"
         // we want to output time as "6:23"
@@ -46,7 +67,10 @@ const Chat = (props) => {
         const date = new Date();
         date.setHours(timeParts[0]);
         date.setMinutes(timeParts[1]);
-        return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit"});
+        return date.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+        });
       }
 
       socket.on("leave_room", (message) => {
@@ -61,6 +85,7 @@ const Chat = (props) => {
         socket.off("message");
         socket.off("leave_room");
         socket.off("switch_admin_success");
+        socket.off("rotate_artist");
         socket.emit("leave_room", { username: props.name, room: props.room });
       };
     }
@@ -101,7 +126,7 @@ const Chat = (props) => {
                   <span className="chat-username">{msg.username}: </span>
                 )}
                 {msg.message}
-                {<span className="chat-timestamp">  {msg.timestamp}</span>}
+                {<span className="chat-timestamp"> {msg.timestamp}</span>}
               </li>
             ))}
           </ul>

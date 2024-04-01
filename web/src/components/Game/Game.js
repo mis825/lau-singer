@@ -20,6 +20,7 @@ const Game = (props) => {
 
   const [word, setWord] = useState("");
   const [roles, setRoles] = useState([]);
+  const [gameState, setGameState] = useState("waiting");
 
   useEffect(() => {
     if (!props.loggedIn || !props.name) {
@@ -60,6 +61,8 @@ const Game = (props) => {
         setWord={setWord}
         artist={artist}
         setArtist={setArtist}
+        gameState={gameState}
+        setGameState={setGameState}
       />
       </CanvasProvider>
       
@@ -76,6 +79,8 @@ const Game = (props) => {
         setRoles={setRoles}
         artist={artist}
         setArtist={setArtist}
+        gameState={gameState}
+        setGameState={setGameState}
       />
     </div>
   ) : (

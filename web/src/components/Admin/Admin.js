@@ -11,7 +11,8 @@ const Admin = (props) => {
   useEffect(() => {
     // Load roles
     getRoles()
-  }, [])
+    getWord()
+  }, [props.artist])
   
 
   const clearCanvas = () => {
@@ -37,15 +38,10 @@ const Admin = (props) => {
 
   const switchAdmin = () => {
     socket.emit("switch_admin", { room: props.room, old_admin: props.name });
-  }
-
-  useEffect(() => {
-    socket.emit("rotate_artist_success", { room: props.room, new_artist: props.artist})
-  }, [props.artist])
-  
+  };
 
   const getWord = () => {
-    if (props.name !== props.host) return;
+    if (props.name !== props.artist) return;
     
     let url = new URL(`http://localhost:5000/get_word/${props.room}`);
     fetch(url, {
@@ -58,7 +54,7 @@ const Admin = (props) => {
       .then((data) => {
         props.setWord(data.word);
       });
-  }
+  };
 
   const getRoles = () => {
     let url = new URL(`http://localhost:5000/display_roles/${props.room}`);
@@ -76,26 +72,17 @@ const Admin = (props) => {
   };
 
   const rotateArtist = () => {
-    let url = new URL(`http://localhost:5000/rotate_artist/${props.room}`)
-
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        props.setArtist(data.new_artist)
-      })
-  }
+    socket.emit("rotate_artist", { room: props.room });
+  };
 
   const startGame = () => {
     // Admin-only action
     if (props.name !== props.host) return;
 
-    rotateArtist();
+    if (props.gameState === "playing") return;
 
+    rotateArtist();
+    socket.emit("start_game", { room: props.room });
   }
 
   return (
