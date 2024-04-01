@@ -45,8 +45,7 @@ const CanvasProvider = ({ children, ...props }) => {
   };
 
   const draw = (ev, isEnding) => {
-    console.log("draw", props.host, props.name);
-    if (props.name !== props.host) return;
+    if (props.name !== props.artist) return;
 
     if (!ctx || !isDrawing || !ev) return;
 

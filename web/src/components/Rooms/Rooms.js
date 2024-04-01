@@ -82,7 +82,6 @@ function Rooms(props) {
         if (response.ok) {
           response.json().then((data) => {
             setRooms(data);
-            console.log(data);
           });
         }
       });

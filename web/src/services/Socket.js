@@ -4,10 +4,8 @@ class Socket {
   static socket = null;
 
   static init(username) {
-    Socket.socket = io("http://localhost:5000")//, {
-    //   query: { username },
-    // });
-    console.log("Socket initialized", Socket.socket);
+    Socket.socket = io("http://localhost:5000")
+    // console.log("Socket initialized", Socket.socket);
   }
 
   static getSocket() {

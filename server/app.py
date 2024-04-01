@@ -280,7 +280,7 @@ def rotate_artist(room_code):
     # Assign the artist role to the new artist
     room_to_artist[room_code] = new_artist
 
-    return jsonify({'message': f'Artist for room {room_code} rotated to {new_artist}'})
+    return jsonify({'message': f'Artist for room {room_code} rotated to {new_artist}', 'new_artist': new_artist})
 
 @app.route('/assign_guesser/<room_code>/<username>', methods=['POST'])
 def assign_guesser(room_code, username):
@@ -446,8 +446,8 @@ def clear_canvas(data):
     room_code = data['room']
     name = data['name']
 
-    if name != get_room_creator(room_code):
-        print("Only the creator of the room can clear the canvas")
+    if name != room_to_artist[room_code]:
+        print("Only the artist of the room can clear the canvas")
         return
 
     drawingState.clear()

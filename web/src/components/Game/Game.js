@@ -14,8 +14,12 @@ import Admin from "../Admin/Admin";
 const Game = (props) => {
   const navigate = useNavigate();
   const socket = Socket.getSocket();
+  
   const [host, setHost] = useState("");
+  const [artist, setArtist] = useState("");
+
   const [word, setWord] = useState("");
+  const [roles, setRoles] = useState([]);
 
   useEffect(() => {
     if (!props.loggedIn || !props.name) {
@@ -42,8 +46,8 @@ const Game = (props) => {
 
   return props.name && props.loggedIn ? (
     <div className="Game-container">
-      <CanvasProvider room={props.room} host={host} name={props.name}>
-        <Menu word={word} />
+      <CanvasProvider room={props.room} name={props.name} artist={artist}>
+        <Menu word={word} roles={roles} artist={artist}/>
         <Canvas width={800} height={600} />
         <Chat
         name={props.name}
@@ -54,6 +58,8 @@ const Game = (props) => {
         setHost={setHost}
         word={word}
         setWord={setWord}
+        artist={artist}
+        setArtist={setArtist}
       />
       </CanvasProvider>
       
@@ -66,6 +72,10 @@ const Game = (props) => {
         setHost={setHost}
         word={word}
         setWord={setWord}
+        roles={roles}
+        setRoles={setRoles}
+        artist={artist}
+        setArtist={setArtist}
       />
     </div>
   ) : (

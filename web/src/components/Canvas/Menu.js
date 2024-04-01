@@ -10,6 +10,9 @@ const Menu = (/*{ setLineColor, setLineWidth,
     return ( 
         <div className="Menu"> 
             {props.word ? <h2 className="menu-word-header">Draw: <span className="word">{props.word}</span></h2> : null}
+            {props.roles ? <h2 className="menu-roles">Roles: <span className="roles">{props.roles.join(" ")}</span></h2> : null}
+            {props.artist ? <h2 className="menu-artist"><span className="artist">{props.artist} is drawing</span></h2> : null}
+            
             {/* <label>Color </label> 
             <input 
                 type="color"

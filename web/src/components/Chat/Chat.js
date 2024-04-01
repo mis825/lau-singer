@@ -12,7 +12,6 @@ const Chat = (props) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const socket = Socket.getSocket();
-  console.log("socket", socket);
 
   const messageList = useRef(null);
 
@@ -23,6 +22,10 @@ const Chat = (props) => {
     socket.on("switch_admin_success", (data) => {
       props.setHost(data.new_admin);
       props.setWord("");
+    });
+
+    socket.on("rotate_artist_success", (data) => {
+      props.setArtist(data.new_artist);
     });
     
       socket.on("receive_message", (message) => {
