@@ -20,6 +20,7 @@ const Game = (props) => {
 
   const [word, setWord] = useState("");
   const [roles, setRoles] = useState([]);
+  const [players, setPlayers] = useState([]); // players in the room
   const [gameState, setGameState] = useState("waiting");
 
   useEffect(() => {
@@ -63,6 +64,8 @@ const Game = (props) => {
         setArtist={setArtist}
         gameState={gameState}
         setGameState={setGameState}
+        players={players}
+        setPlayers={setPlayers}
       />
       </CanvasProvider>
       

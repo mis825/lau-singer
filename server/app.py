@@ -41,6 +41,8 @@ room_to_potential_artists = defaultdict(list)
 room_words = {}
 # Global dictionary to store the used words for each room
 room_used_words = defaultdict(set)
+# Global dictionary to store the correct guesses for each room
+room_correct_guesses = defaultdict(list)
 
 # User Table
 class User(db.Model):
@@ -402,7 +404,9 @@ def handle_join_room(data):
     join_room(room_code)
     # active_rooms[room_code].add(request.sid) # add the client to the set of clients for this room
     active_rooms[room_code].add(username) # add the username to the set of clients for this room
-    send(f"{username} has joined the room: {room_code}.", to=room_code)
+    # send(f"{username} has joined the room: {room_code}.", to=room_code)
+    #emit the player list to the room
+    emit('player_list', list(active_rooms[room_code]), room=room_code)
 
 @socketio.on('leave_room')
 def handle_leave_room(data):
@@ -431,30 +435,30 @@ def handle_send_message(data):
         print("Artist sent a message") # DEBUG
         return
 
-    correct_guess = False
-    if room in room_words:
-        if message.lower() == room_words[room].lower():
-            correct_guess = True
-            guesser = data['username']
-            data['username'] = "Game"
-            data['message'] = f'{guesser} has guessed the word!'
-            emit('correct_guess', data, room=room)
-            room_used_words[room].add(room_words[room])
+    if room in room_words and \
+     message.lower() == room_words[room].lower():
+        
+        if data['username'] in room_correct_guesses[room]:
+            return
+        
+        room_correct_guesses[room].append(data['username'])
+        guesser = data['username']
+        data['username'] = "Game"
+        data['message'] = f'{guesser} has guessed the word!'
+        data['isGameMessage'] = True
+
+        emit('correct_guess', data, room=room)
+
+        if len(room_correct_guesses[room]) == len(active_rooms[room]) - 1:
+            room_correct_guesses.pop(room)
             room_words.pop(room)
             emit('clearCanvas', room=room)
             handle_rotate_artist({'room': room})
-            
-    if not correct_guess:
-        emit('receive_message', data, room=room)
+            return
+        return
     
-    # print(f'room: {room}') # DEBUG
-    # print(f'message: {message}') # DEBUG
-    # print(f'sid: {sid}') # DEBUG
-    # print(f'timestamp: {timestamp}') # DEBUG
-    
-    # print(f'Emitting receive_message in {room}')  # DEBUG
-    # emit('receive_message', data, room=room)
-    
+    emit('receive_message', data, room=room)
+
 @socketio.on('start_game')
 def handle_start_game(data):
     room_code = data['room']

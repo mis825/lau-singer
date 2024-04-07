@@ -20,7 +20,6 @@ const Admin = (props) => {
   };
 
   const deleteRoom = () => {
-    // console.log("propsname: ", props.name);
     let url = new URL(`http://localhost:5000/room/${props.room}`);
     url.searchParams.append("username", props.name);
 

@@ -6,7 +6,6 @@ import "./Chat.css";
 
 // const socket = Socket.getSocket();
 
-// console.log("socket", socket);
 
 const Chat = (props) => {
   const [message, setMessage] = useState("");
@@ -19,13 +18,16 @@ const Chat = (props) => {
     if (props.name && props.loggedIn) {
       socket.emit("join_room", { username: props.name, room: props.room });
 
+      socket.on("player_list", (players) => {
+        props.setPlayers(players);
+      });
+
       socket.on("switch_admin_success", (data) => {
         props.setHost(data.new_admin);
         props.setWord("");
       });
 
       socket.on("rotate_artist_success", (data) => {
-        console.log("new artist: ", data.new_artist);
         props.setArtist(data.new_artist);
         props.setWord("");
       });
@@ -48,17 +50,14 @@ const Chat = (props) => {
             username: message.username,
             message: message.message,
             timestamp: getTime(message.timestamp),
+            isGameMessage: message.isGameMessage,
           },
         ]);
-
-        
       });
 
       socket.on("start_game_success", (data) => {
-        console.log(data.message)
         props.setGameState("playing");
       });
-                
 
       function getTime(timestamp) {
         // timestamp is in format "18:23:59"
@@ -98,6 +97,15 @@ const Chat = (props) => {
     }
   }, [messages]);
 
+  // Hide chat form for artists
+  useEffect(() => {
+    if (props.artist === props.name) {
+      document.querySelector(".chat-form").style.display = "none";
+    } else {
+      document.querySelector(".chat-form").style.display = "block";
+    }
+  }, [props.artist, props.name]);
+
   const sendMessage = (e) => {
     e.preventDefault();
     if (message && props.name && props.loggedIn) {
@@ -116,12 +124,14 @@ const Chat = (props) => {
       ) : (
         <div>
           <div className="chat-header">Room {props.room}</div>
+          <div className="player-count">{props.players.length} players</div>
           <ul className="chat-messages" ref={messageList}>
             {messages.map((msg, index) => (
               <li key={index}>
-                {/* <div className="chat-host-message"> */}
                 {props.host === msg.username ? (
                   <span className="chat-host">{msg.username}: </span>
+                ) : msg.isGameMessage ? (
+                  <span className="chat-game-message">{msg.username}: </span>
                 ) : (
                   <span className="chat-username">{msg.username}: </span>
                 )}
