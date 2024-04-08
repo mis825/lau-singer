@@ -20,7 +20,7 @@ const Admin = (props) => {
   };
 
   const deleteRoom = () => {
-    let url = new URL(`http://localhost:5000/room/${props.room}`);
+    let url = new URL(`${Socket.getServerURL()}/room/${props.room}`);
     url.searchParams.append("username", props.name);
 
     fetch(url, {
@@ -42,7 +42,7 @@ const Admin = (props) => {
   const getWord = () => {
     if (props.name !== props.artist) return;
     
-    let url = new URL(`http://localhost:5000/get_word/${props.room}`);
+    let url = new URL(`${Socket.getServerURL()}/get_word/${props.room}`);
     fetch(url, {
       method: "GET",
       headers: {
@@ -56,7 +56,7 @@ const Admin = (props) => {
   };
 
   const getRoles = () => {
-    let url = new URL(`http://localhost:5000/display_roles/${props.room}`);
+    let url = new URL(`${Socket.getServerURL()}/display_roles/${props.room}`);
 
     fetch(url, {
       method: "GET",
@@ -80,8 +80,16 @@ const Admin = (props) => {
 
     if (props.gameState === "playing") return;
 
+    if (props.countdown) {
+      clearInterval(props.countdown);
+    }
+
+    // Start the game countdown
+    socket.emit("countdown_start", { room: props.room, duration: 60});
+
     rotateArtist();
-    socket.emit("start_game", { room: props.room });
+
+    socket.emit("start_game", { room: props.room, username: props.name});
   }
 
   return (

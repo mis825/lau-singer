@@ -12,7 +12,7 @@ const Test = () => {
       name: targetUser || "Michael",
     };
 
-    fetch(`http://localhost:5000/api/get-user?name=${targetUser}`, {
+    fetch(`${Socket.getServerURL()}/api/get-user?name=${targetUser}`, {
       method: "GET",
     }).then((response) => {
         if (response.ok) {
@@ -32,7 +32,7 @@ const Test = () => {
       id: targetUserId || 1,
     };
 
-    fetch(`http://localhost:5000/api/get-user?id=${targetUserId}`, {
+    fetch(`${Socket.getServerURL()}/api/get-user?id=${targetUserId}`, {
       method: "GET",
     }).then((response) => {
         if (response.ok) {

@@ -43,6 +43,8 @@ room_words = {}
 room_used_words = defaultdict(set)
 # Global dictionary to store the correct guesses for each room
 room_correct_guesses = defaultdict(list)
+# Global dictionary to store the people who have drawn in the room
+room_to_drawn = defaultdict(list)
 
 # User Table
 class User(db.Model):
@@ -314,6 +316,9 @@ def handle_rotate_artist(data):
     # Remove the new artist from the list of potential artists
     room_to_potential_artists[room_code].remove(new_artist)
 
+    # Add the user to the list of people who have drawn in the room
+    room_to_drawn[room_code].append(new_artist)
+
     # Assign the artist role to the new artist
     room_to_artist[room_code] = new_artist
     print(f'new_artist: {new_artist}') # DEBUG
@@ -447,17 +452,60 @@ def handle_send_message(data):
         data['message'] = f'{guesser} has guessed the word!'
         data['isGameMessage'] = True
 
-        emit('correct_guess', data, room=room)
-
         if len(room_correct_guesses[room]) == len(active_rooms[room]) - 1:
             room_correct_guesses.pop(room)
             room_words.pop(room)
             emit('clearCanvas', room=room)
+            if len(room_to_drawn[room]) == len(active_rooms[room]):
+                room_to_drawn[room].clear()
+                emit('game_over', {'message': 'All players have drawn!'}, room=room)
+                return
             handle_rotate_artist({'room': room})
             return
+    
+        data['startCountdown'] = True
+        emit('correct_guess', data, room=room)
         return
+
     
     emit('receive_message', data, room=room)
+
+@socketio.on('countdown')
+def handle_countdown(data):
+    room = data['room']
+
+    # Check if the room exists
+    if room not in active_rooms:
+        emit('countdown_error', {'error': 'Room not found'})
+        return
+    
+    # Check if the user is the creator of the room
+    if data['username'] != room_to_creator[room]:
+        emit('countdown_error', {'error': 'Only the admin can start the countdown'})
+        return
+    
+    if room in room_correct_guesses:
+        room_correct_guesses.pop(room)
+
+    if room in room_words:
+        room_words.pop(room)
+
+    emit('clearCanvas', room=room)
+
+    # check if room_to_drawn is full
+    if len(room_to_drawn[room]) == len(active_rooms[room]):
+        room_to_drawn[room].clear()
+        emit('game_over', {'message': 'All players have drawn!'}, room=room)
+        return
+
+    handle_rotate_artist({'room': room})
+
+    emit('countdown', data, room=room)
+
+@socketio.on('countdown_start')
+def handle_countdown_start(data):
+    room = data['room']
+    emit('countdown_start', data, room=room)
 
 @socketio.on('start_game')
 def handle_start_game(data):

@@ -27,7 +27,7 @@ function Login(props) {
       username: name,
     };
 
-    fetch("http://localhost:5000/register", {
+    fetch(`${Socket.getServerURL()}/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

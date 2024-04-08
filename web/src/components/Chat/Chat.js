@@ -15,6 +15,10 @@ const Chat = (props) => {
   const messageList = useRef(null);
 
   useEffect(() => {
+    console.log("Time remaining: ", props.timeRemaining);
+  }, [props.timeRemaining]);
+
+  useEffect(() => {
     if (props.name && props.loggedIn) {
       socket.emit("join_room", { username: props.name, room: props.room });
 
@@ -30,6 +34,9 @@ const Chat = (props) => {
       socket.on("rotate_artist_success", (data) => {
         props.setArtist(data.new_artist);
         props.setWord("");
+        clearInterval(props.countdown);
+        props.setCountdown(null);
+        props.setTimeRemaining(0);
       });
 
       socket.on("receive_message", (message) => {
@@ -53,11 +60,55 @@ const Chat = (props) => {
             isGameMessage: message.isGameMessage,
           },
         ]);
+
+        if (message.startCountdown == true && props.host == props.name) {
+        socket.emit("countdown_start", { room: props.room, duration: 60});
+        }
       });
 
       socket.on("start_game_success", (data) => {
         props.setGameState("playing");
       });
+
+      socket.on("game_over", (data) => {
+        props.setGameState("waiting");
+        props.setArtist("");
+        props.setWord("");
+        clearInterval(props.countdown);
+        props.setCountdown(null);
+        props.setTimeRemaining(0);
+      });
+
+      socket.on("countdown", data => {
+        socket.emit("countdown_start", { room: props.room, duration: 60 });
+      });
+
+      socket.on("countdown_start", (data) => {
+
+        clearInterval(props.countdown);
+        props.setCountdown(null);
+
+        let timeRemaining = data.duration;
+
+        const countdownInterval = setInterval(() => {
+          // Update the state with the current remaining time
+          props.setTimeRemaining(timeRemaining);
+
+          if (timeRemaining === 0) {
+            socket.emit("countdown", {
+              room: props.room,
+              username: props.name,
+            });
+            clearInterval(countdownInterval);
+          } else {
+            // Decrease the remaining time
+            timeRemaining -= 1;
+          }
+        }, 1000);
+
+        props.setCountdown(countdownInterval);
+      });
+
 
       function getTime(timestamp) {
         // timestamp is in format "18:23:59"
@@ -85,10 +136,24 @@ const Chat = (props) => {
         socket.off("leave_room");
         socket.off("switch_admin_success");
         socket.off("rotate_artist");
+        socket.off("receive_message");
+        socket.off("correct_guess");
+        socket.off("start_game_success");
+        socket.off("countdown_start");
+        socket.off("countdown");
+        socket.
         socket.emit("leave_room", { username: props.name, room: props.room });
       };
     }
   }, [props.name, props.loggedIn, props.room]);
+
+  // Check if timeRemaining is 0
+  // useEffect(() => {
+  //   if (props.timeRemaining === 0 && props.host === props.name) {
+  //     // Rotate artist
+  //     socket.emit("rotate_artist", { room: props.room });
+  //   }
+  // }, [props.timeRemaining]);
 
   // Autoscroll
   useEffect(() => {
@@ -125,6 +190,11 @@ const Chat = (props) => {
         <div>
           <div className="chat-header">Room {props.room}</div>
           <div className="player-count">{props.players.length} players</div>
+          {props.timeRemaining === 0 ? (
+            <div className="game-countdown">Waiting for next round...</div>
+          ) : (
+            <div className="game-countdown">{props.timeRemaining} seconds</div>
+          )}
           <ul className="chat-messages" ref={messageList}>
             {messages.map((msg, index) => (
               <li key={index}>

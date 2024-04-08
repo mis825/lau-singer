@@ -22,6 +22,8 @@ const Game = (props) => {
   const [roles, setRoles] = useState([]);
   const [players, setPlayers] = useState([]); // players in the room
   const [gameState, setGameState] = useState("waiting");
+  const [countdown, setCountdown] = useState();
+  const [timeRemaining, setTimeRemaining] = useState(0);
 
   useEffect(() => {
     if (!props.loggedIn || !props.name) {
@@ -32,7 +34,7 @@ const Game = (props) => {
   // get host from /room/get-creator/<room_code>
   useEffect(() => {
     if (props.room) {
-      let url = new URL(`http://localhost:5000/room/get-creator/${props.room}`);
+      let url = new URL(`${Socket.getServerURL()}/room/get-creator/${props.room}`);
       fetch(url, {
         method: "GET",
         headers: {
@@ -66,6 +68,10 @@ const Game = (props) => {
         setGameState={setGameState}
         players={players}
         setPlayers={setPlayers}
+        countdown={countdown}
+        setCountdown={setCountdown}
+        timeRemaining={timeRemaining}
+        setTimeRemaining={setTimeRemaining}
       />
       </CanvasProvider>
       
@@ -84,6 +90,8 @@ const Game = (props) => {
         setArtist={setArtist}
         gameState={gameState}
         setGameState={setGameState}
+        countdown={countdown}
+        setCountdown={setCountdown}
       />
     </div>
   ) : (

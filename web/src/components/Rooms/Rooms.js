@@ -36,7 +36,7 @@ function Rooms(props) {
 
   const createRoom = async () => {
     if (props.loggedIn) {
-      fetch("http://localhost:5000/create-room", {
+      fetch(`${Socket.getServerURL()}/create-room`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -73,7 +73,7 @@ function Rooms(props) {
 
   const refreshRooms = async () => {
     if (props.loggedIn) {
-      fetch("http://localhost:5000/api/get-rooms", {
+      fetch(`${Socket.getServerURL()}/api/get-rooms`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
