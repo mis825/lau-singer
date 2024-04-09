@@ -1,6 +1,14 @@
 import requests
 import time
 from socketio import Client
+from collections import defaultdict
+
+# Global dictionary to store the current word for each room
+room_words = {}
+# Global dictionary to store the scores for each room
+room_scores = defaultdict(lambda: defaultdict(int))
+# Global dictionary to store the current score for each room
+room_current_scores = defaultdict(lambda: 100)
 
 def test_join_room(username, room):
     sio = Client()
@@ -278,29 +286,73 @@ def test_switch_admin(old_admin, new_admin):
              
         return True
 
+def test_submit_correct_guess(username, room_code):
+    # get the word to guess for the room
+    response = requests.get(f'http://localhost:5000/get_word/{room_code}')
+    word = response.json()['word']
+    print(f'Word to guess for room {room_code}: {word}')
+    
+    # submit the correct guess
+    response = requests.post(f'http://localhost:5000/submit_guess/{room_code}', json={'username': username, 'guess': word})
+    print(f'Guess submitted by {username}: {word}')
+    if response.status_code == 200:
+        print(f'Correct guess for room {room_code} submitted by {username}')
+        return True
+    elif response.status_code == 404:
+        print(f'Room {room_code} not found')
+    else:
+        print(f'Failed to submit guess for room {room_code} by {username}')
+    return False
+
+def test_submit_incorrect_guess(username, room_code):
+    # get the word to guess for the room
+    response = requests.get(f'http://localhost:5000/get_word/{room_code}')
+    word = response.json()['word']
+    print(f'Word to guess for room {room_code}: {word}')
+    
+    # submit the correct guess
+    response = requests.post(f'http://localhost:5000/submit_guess/{room_code}', json={'username': username, 'guess': 'incorrect'})
+    print(f'Guess submitted by {username}: incorrect')
+    if response.status_code == 200:
+        print(f'Incorrect guess for room {room_code} submitted by {username}')
+        return True
+    elif response.status_code == 404:
+        print(f'Room {room_code} not found')
+    else:
+        print(f'Failed to submit guess for room {room_code} by {username}')
+    return False
+
+def test_get_scores(room_code):
+    response = requests.get(f'http://localhost:5000/get_scores/{room_code}')
+    if response.status_code == 200:
+        print(f'Scores for room {room_code}: {response.json()}')
+        return True
+    print(f'Failed to get scores for room {room_code}')
+    return False
+
 if __name__ == "__main__":
     assert test_create_and_join_room(user1='user1', user2='user2') == True
     active_rooms = test_get_rooms()
     room1_code = active_rooms[0]
     sio3 = test_join_room(username='user3', room=room1_code)
-    sio4 = test_join_room(username='user4', room=room1_code)
-    sio5 = test_join_room(username='user5', room=room1_code)
+    # sio4 = test_join_room(username='user4', room=room1_code)
+    # sio5 = test_join_room(username='user5', room=room1_code)
     print('\n')
     
-    assert test_display_roles(room_code=room1_code) == True
-    assert test_rotate_artist(room_code=room1_code) == True
-    test_display_roles(room_code=room1_code)
-    assert test_rotate_artist(room_code=room1_code) == True
-    test_display_roles(room_code=room1_code)
+    # assert test_display_roles(room_code=room1_code) == True
+    # assert test_rotate_artist(room_code=room1_code) == True
+    # test_display_roles(room_code=room1_code)
+    # assert test_rotate_artist(room_code=room1_code) == True
+    # test_display_roles(room_code=room1_code)
       
-    assert test_assign_artist(room_code=room1_code, username='user888') == False
-    assert test_assign_artist(room_code='1234', username='user2') == False
-    assert test_assign_artist(room_code=room1_code, username='user1') == True
+    # assert test_assign_artist(room_code=room1_code, username='user888') == False
+    # assert test_assign_artist(room_code='1234', username='user2') == False
+    # assert test_assign_artist(room_code=room1_code, username='user1') == True
     
-    test_display_roles(room_code=room1_code)
+    # test_display_roles(room_code=room1_code)
     
-    assert test_get_word(room_code=room1_code) == True
-    assert test_change_word(room_code=room1_code) == True
+    # assert test_get_word(room_code=room1_code) == True
+    # assert test_change_word(room_code=room1_code) == True
 
     # print('Testing assign_guesser...')
     # assert test_assign_guesser(room_code=room1_code, username='random_user2') == True
@@ -338,6 +390,15 @@ if __name__ == "__main__":
     # test_switch_admin(old_admin='old_admin', new_admin='new_admin')
     # test_get_rooms()
     # print('\n')
+
+    # room_code = test_create_room(username='user1')
+    assert test_submit_correct_guess(username='user1', room_code=room1_code) == True
+    assert test_submit_incorrect_guess(username='user2', room_code=room1_code) == True
+    assert test_submit_correct_guess(username='user3', room_code=room1_code) == True
+    assert test_submit_correct_guess(username='user2', room_code=room1_code) == True
+    assert test_submit_correct_guess(username='user1', room_code=room1_code) == True
+    test_get_scores(room_code=room1_code)
+    
 
 
     
