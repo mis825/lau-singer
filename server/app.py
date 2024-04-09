@@ -41,6 +41,12 @@ room_to_potential_artists = defaultdict(list)
 room_words = {}
 # Global dictionary to store the used words for each room
 room_used_words = defaultdict(set)
+# Global dictionary to store the scores for each room
+room_scores = defaultdict(lambda: defaultdict(int))
+# Global dictionary to store the current score for each room
+room_current_scores = defaultdict(lambda: 100)
+# Global dictionary to store the number of correct guesses for each room
+room_correct_guesses = defaultdict(int)
 
 # User Table
 class User(db.Model):
@@ -297,6 +303,45 @@ def display_roles(room_code):
             user_roles.append('guesser')
         roles[user] = user_roles if user_roles else ['none']
     return jsonify(roles)
+
+@app.route('/submit_guess/<room_code>', methods=['POST'])
+def submit_guess(room_code):
+    # Check if the room exists
+    if room_code not in active_rooms:
+        return jsonify({'error': 'Room not found'}), 404
+
+    # Get the guess and username from the request body
+    guess = request.json.get('guess')
+    username = request.json.get('username')
+
+    # Check if the guess is correct
+    if guess == room_words.get(room_code):
+        # Increment the guesser's score by the current score for the room
+        room_scores[room_code][username] += room_current_scores[room_code]
+        # Increment the number of correct guesses for the room
+        room_correct_guesses[room_code] += 1
+
+        # Check if everyone has guessed
+        if room_correct_guesses[room_code] == len(active_rooms[room_code]):
+            # Reset the current score and the number of correct guesses for the room
+            room_current_scores[room_code] = 100
+            room_correct_guesses[room_code] = 0
+        else:
+            # Decrement the current score for the room by 10, with a minimum score of 0
+            room_current_scores[room_code] = max(room_current_scores[room_code] - 10, 0)
+
+        return jsonify({'message': 'Correct guess!', 'score': room_scores[room_code][username]}), 200
+    else:
+        return jsonify({'message': 'Incorrect guess.', 'score': room_scores[room_code][username]}), 200
+    
+@app.route('/get_scores/<room_code>', methods=['GET'])
+def get_scores(room_code):
+    # Check if the room exists
+    if room_code not in active_rooms:
+        return jsonify({'error': 'Room not found'}), 404
+
+    # Return the scores for the room
+    return jsonify(room_scores[room_code]), 200
 
 def get_current_user():
     # get the username associated with the sid
