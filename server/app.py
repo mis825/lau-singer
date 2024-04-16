@@ -436,6 +436,8 @@ def handle_send_message(data):
     data['timestamp'] = timestamp
     data['sid'] = sid
 
+    print(f"room: {room}, message: {message}, timestamp: {timestamp}, sid: {sid}") # DEBUG
+
     if room_to_artist.get(room) == data['username']:
         print("Artist sent a message") # DEBUG
         return
@@ -446,22 +448,23 @@ def handle_send_message(data):
         if data['username'] in room_correct_guesses[room]:
             return
         
+        print("Correct guess!") # DEBUG
+        
         room_correct_guesses[room].append(data['username'])
         guesser = data['username']
         data['username'] = "Game"
         data['message'] = f'{guesser} has guessed the word!'
         data['isGameMessage'] = True
 
-        if len(room_correct_guesses[room]) == len(active_rooms[room]) - 1:
+        if len(room_correct_guesses[room]) == len(active_rooms[room]) - 1: # check if all players have guessed the word
             room_correct_guesses.pop(room)
             room_words.pop(room)
             emit('clearCanvas', room=room)
-            if len(room_to_drawn[room]) == len(active_rooms[room]):
+            if len(room_to_drawn[room]) == len(active_rooms[room]): # check if room_to_drawn is full
                 room_to_drawn[room].clear()
                 emit('game_over', {'message': 'All players have drawn!'}, room=room)
                 return
             handle_rotate_artist({'room': room})
-            return
     
         data['startCountdown'] = True
         emit('correct_guess', data, room=room)

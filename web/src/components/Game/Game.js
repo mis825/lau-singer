@@ -22,9 +22,9 @@ const Game = (props) => {
   const [roles, setRoles] = useState([]);
   const [players, setPlayers] = useState([]); // players in the room
   const [gameState, setGameState] = useState("waiting");
-  const [countdown, setCountdown] = useState();
+  const [countdown, setCountdown] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
-
+  
   useEffect(() => {
     if (!props.loggedIn || !props.name) {
       navigate("/");

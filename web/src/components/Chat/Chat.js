@@ -10,13 +10,36 @@ import "./Chat.css";
 const Chat = (props) => {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [shouldClear, setShouldClear] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
   const socket = Socket.getSocket();
 
   const messageList = useRef(null);
 
+  // useEffect(() => {
+  //   console.log("props countdown 1111: ", props.countdown);
+  // }, [props.countdown]);
+
   useEffect(() => {
-    console.log("Time remaining: ", props.timeRemaining);
-  }, [props.timeRemaining]);
+    // console.log("Game state: ", props.gameState, "  shouldClear: ", shouldClear, "countdown: ", props.countdown, "gameOver: ", gameOver);
+    if (shouldClear && props.gameState === "playing" && props.countdown !== 0 && !gameOver) {
+      // console.log("Clearing countdown (correct-guess): ", props.countdown);
+      clearInterval(props.countdown);
+      props.setCountdown(0);
+      props.setTimeRemaining(0);
+      if (props.host === props.name) {
+        socket.emit("countdown_start", { room: props.room, duration: 60});
+        // console.log("Countdown started", props.countdown);
+      }
+      setShouldClear(false);
+    } else if (shouldClear && gameOver) {
+      // console.log("Clearing countdown (gameover): ", props.countdown);
+      clearInterval(props.countdown);
+      props.setCountdown(0);
+      props.setTimeRemaining(0);
+      setShouldClear(false);
+    }
+  }, [shouldClear, props.gameState, gameOver, props.countdown]);
 
   useEffect(() => {
     if (props.name && props.loggedIn) {
@@ -34,8 +57,6 @@ const Chat = (props) => {
       socket.on("rotate_artist_success", (data) => {
         props.setArtist(data.new_artist);
         props.setWord("");
-        clearInterval(props.countdown);
-        props.setCountdown(null);
         props.setTimeRemaining(0);
       });
 
@@ -60,40 +81,42 @@ const Chat = (props) => {
             isGameMessage: message.isGameMessage,
           },
         ]);
-
-        if (message.startCountdown == true && props.host == props.name) {
-        socket.emit("countdown_start", { room: props.room, duration: 60});
+        // console.log("message", message);
+        if (message.startCountdown) {
+          setShouldClear(true);
         }
       });
 
       socket.on("start_game_success", (data) => {
         props.setGameState("playing");
+        setGameOver(false);
       });
 
       socket.on("game_over", (data) => {
         props.setGameState("waiting");
         props.setArtist("");
         props.setWord("");
-        clearInterval(props.countdown);
-        props.setCountdown(null);
-        props.setTimeRemaining(0);
+        setShouldClear(true);
+        setGameOver(true);
       });
 
-      socket.on("countdown", data => {
-        socket.emit("countdown_start", { room: props.room, duration: 60 });
-      });
+      // socket.on("countdown", data => {
+      //   socket.emit("countdown_start", { room: props.room, duration: 60 }); // start here.
+      // });
 
       socket.on("countdown_start", (data) => {
 
-        clearInterval(props.countdown);
-        props.setCountdown(null);
+        if (props.countdown) {
+          return;
+        }
 
+        
         let timeRemaining = data.duration;
-
+        
         const countdownInterval = setInterval(() => {
           // Update the state with the current remaining time
           props.setTimeRemaining(timeRemaining);
-
+          
           if (timeRemaining === 0) {
             socket.emit("countdown", {
               room: props.room,
@@ -105,11 +128,12 @@ const Chat = (props) => {
             timeRemaining -= 1;
           }
         }, 1000);
-
+        
         props.setCountdown(countdownInterval);
+        // console.log("starting a new countdown", countdownInterval);
       });
-
-
+      
+      
       function getTime(timestamp) {
         // timestamp is in format "18:23:59"
         // we want to output time as "6:23"
@@ -146,14 +170,6 @@ const Chat = (props) => {
       };
     }
   }, [props.name, props.loggedIn, props.room]);
-
-  // Check if timeRemaining is 0
-  // useEffect(() => {
-  //   if (props.timeRemaining === 0 && props.host === props.name) {
-  //     // Rotate artist
-  //     socket.emit("rotate_artist", { room: props.room });
-  //   }
-  // }, [props.timeRemaining]);
 
   // Autoscroll
   useEffect(() => {
