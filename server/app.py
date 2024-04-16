@@ -50,7 +50,7 @@ room_scores = defaultdict(lambda: defaultdict(int))
 # Global dictionary to store the current score for each room
 room_current_scores = defaultdict(lambda: 100)
 # Global dictionary to store the number of correct guesses for each room
-room_correct_guesses = defaultdict(int)
+room_correct_guesses_count = defaultdict(int)
 
 # User Table
 class User(db.Model):
@@ -360,27 +360,28 @@ def display_roles(room_code):
     return jsonify(roles)
 
 @app.route('/submit_guess/<room_code>', methods=['POST'])
-def submit_guess(room_code):
+def submit_guess(room_code, data):
     # Check if the room exists
     if room_code not in active_rooms:
         return jsonify({'error': 'Room not found'}), 404
 
     # Get the guess and username from the request body
-    guess = request.json.get('guess')
-    username = request.json.get('username')
+    guess = data.get('guess') # request.json.get('guess')
+    username = data.get('username') # request.json.get('username')
 
     # Check if the guess is correct
-    if guess == room_words.get(room_code):
+    if guess == room_words.get(room_code).lower():
+        print("Correct guess!!!!!!!!!!!") # DEBUG
         # Increment the guesser's score by the current score for the room
         room_scores[room_code][username] += room_current_scores[room_code]
         # Increment the number of correct guesses for the room
-        room_correct_guesses[room_code] += 1
+        room_correct_guesses_count[room_code] += 1
 
         # Check if everyone has guessed
-        if room_correct_guesses[room_code] == len(active_rooms[room_code]):
+        if room_correct_guesses_count[room_code] == len(active_rooms[room_code]):
             # Reset the current score and the number of correct guesses for the room
             room_current_scores[room_code] = 100
-            room_correct_guesses[room_code] = 0
+            room_correct_guesses_count[room_code] = 0
         else:
             # Decrement the current score for the room by 10, with a minimum score of 0
             room_current_scores[room_code] = max(room_current_scores[room_code] - 10, 0)
@@ -494,6 +495,10 @@ def handle_send_message(data):
             return
         
         print("Correct guess!") # DEBUG
+
+        # call the submit_guess function to increment the score of the guesser
+        submit_data = {'username': data['username'], 'room': room, "guess": message.lower()}
+        submit_guess(room, submit_data)
         
         room_correct_guesses[room].append(data['username'])
         guesser = data['username']
@@ -508,6 +513,7 @@ def handle_send_message(data):
             if len(room_to_drawn[room]) == len(active_rooms[room]): # check if room_to_drawn is full
                 room_to_drawn[room].clear()
                 emit('game_over', {'message': 'All players have drawn!'}, room=room)
+                emit('correct_guess', data, room=room)
                 return
             handle_rotate_artist({'room': room})
     

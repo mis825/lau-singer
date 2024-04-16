@@ -15,10 +15,29 @@ const Chat = (props) => {
   const socket = Socket.getSocket();
 
   const messageList = useRef(null);
+  const scoreList = useRef(null);
 
-  // useEffect(() => {
-  //   console.log("props countdown 1111: ", props.countdown);
-  // }, [props.countdown]);
+  useEffect(() => {
+    console.log("scoers: ", props.scores);
+  }, [props.scores]);
+
+  useEffect(() => {
+    // check for scores
+    if (props.room) {
+      let url = new URL(`${Socket.getServerURL()}/get_scores/${props.room}`);
+      fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          props.setScores(data);
+          // console.log("Scores: ", data);
+        });
+    }
+  }, [messages]);
 
   useEffect(() => {
     // console.log("Game state: ", props.gameState, "  shouldClear: ", shouldClear, "countdown: ", props.countdown, "gameOver: ", gameOver);
@@ -165,7 +184,6 @@ const Chat = (props) => {
         socket.off("start_game_success");
         socket.off("countdown_start");
         socket.off("countdown");
-        socket.
         socket.emit("leave_room", { username: props.name, room: props.room });
       };
     }
@@ -211,6 +229,15 @@ const Chat = (props) => {
           ) : (
             <div className="game-countdown">{props.timeRemaining} seconds</div>
           )}
+          <div className="score-list">
+            {Object.entries(props.scores).map(([player, score]) => (
+              <div key={player}>
+                <p>
+                  {player}: {score}
+                </p>
+              </div>
+            ))}
+          </div>
           <ul className="chat-messages" ref={messageList}>
             {messages.map((msg, index) => (
               <li key={index}>

@@ -24,6 +24,7 @@ const Game = (props) => {
   const [gameState, setGameState] = useState("waiting");
   const [countdown, setCountdown] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState(0);
+  const [scores, setScores] = useState({});
   
   useEffect(() => {
     if (!props.loggedIn || !props.name) {
@@ -72,6 +73,8 @@ const Game = (props) => {
         setCountdown={setCountdown}
         timeRemaining={timeRemaining}
         setTimeRemaining={setTimeRemaining}
+        scores={scores}
+        setScores={setScores}
       />
       </CanvasProvider>
       
