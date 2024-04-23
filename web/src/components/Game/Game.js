@@ -52,7 +52,7 @@ const Game = (props) => {
   return props.name && props.loggedIn ? (
     <div className="Game-container">
       <CanvasProvider room={props.room} name={props.name} artist={artist}>
-        <Menu word={word} roles={roles} artist={artist}/>
+        <Menu word={word} roles={roles} artist={artist} name={props.name}/>
         <Canvas width={800} height={600} />
         <Chat
         name={props.name}
