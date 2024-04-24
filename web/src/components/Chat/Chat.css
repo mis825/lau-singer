@@ -32,13 +32,20 @@
 
 .chat-container {
     /* width: 90%; */
-    min-width: 400px;
+    /* min-width: 400px; */
     margin: 0 auto;
-    margin-top: 20vh;
+    /* margin-top: 20vh; */
     padding: 20px;
     font-family: Inter, sans-serif;
     font-feature-settings: 'liga' 1, 'calt' 1;
     color: var(--color-text);
+    /* max-width: 100%; */
+    /* make this inline with the other div with the same parent */
+    display: inline-block;
+    margin-left: 50px;
+    /* 
+    margin-top: 120px; */
+    
 }
 
 .chat-messages {

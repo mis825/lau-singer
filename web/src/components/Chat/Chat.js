@@ -65,6 +65,7 @@ const Chat = (props) => {
       socket.emit("join_room", { username: props.name, room: props.room });
 
       socket.on("player_list", (players) => {
+        console.log("player_list: ", players);
         props.setPlayers(players);
       });
 
