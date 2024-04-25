@@ -1,8 +1,10 @@
 .Menu {
-    max-height: 80px;
+    max-height: 120px;
+    min-height: 100px;
     padding: 0 20px;
     background-color: var(--color-background-secondary);
     color: var(--color-text);
+    padding-bottom: 30px;
 }
 
 .menu-word-header {
@@ -23,13 +25,13 @@
     margin: auto;
     /* background: #020d3a; */
     width: 100%;
-    margin-top: 32px;
+    /* margin-top: 32px; */
     padding: 10px;
     text-align: center;
     border-radius: 50px;
-    grid-row: 2;
-    grid-column: 2;
-    margin-bottom: 50px;
+    /* grid-row: 2;
+    grid-column: 2; */
+    margin-bottom: 20px;
 }
 
 #stylepicker-container label {

@@ -376,10 +376,12 @@ def submit_guess(room_code, data):
         room_scores[room_code][username] += room_current_scores[room_code]
         # Increment the number of correct guesses for the room
         room_correct_guesses_count[room_code] += 1
-
+        print(f'room_correct_guesses_count: {room_correct_guesses_count[room_code]}') # DEBUG
+        print(f'active_rooms: {active_rooms[room_code]}')
         # Check if everyone has guessed
-        if room_correct_guesses_count[room_code] == len(active_rooms[room_code]):
+        if room_correct_guesses_count[room_code] == len(active_rooms[room_code]) - 1:
             # Reset the current score and the number of correct guesses for the room
+            print("All players have guessed the word!") # DEBUG
             room_current_scores[room_code] = 100
             room_correct_guesses_count[room_code] = 0
         else:
@@ -516,8 +518,8 @@ def handle_send_message(data):
                 emit('correct_guess', data, room=room)
                 return
             handle_rotate_artist({'room': room})
-    
-        data['startCountdown'] = True
+            data['startCountdown'] = True
+            
         emit('correct_guess', data, room=room)
         return
 
@@ -549,9 +551,10 @@ def handle_countdown(data):
     # check if room_to_drawn is full
     if len(room_to_drawn[room]) == len(active_rooms[room]):
         room_to_drawn[room].clear()
+        print("All players have drawn!") # DEBUG
         emit('game_over', {'message': 'All players have drawn!'}, room=room)
         return
-
+    print("Starting countdown...") # DEBUG
     handle_rotate_artist({'room': room})
 
     emit('countdown', data, room=room)

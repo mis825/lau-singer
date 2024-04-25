@@ -12,6 +12,7 @@ const Chat = (props) => {
   const [messages, setMessages] = useState([]);
   const [shouldClear, setShouldClear] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [correctGuesses, setCorrectGuesses] = useState(0);
   const socket = Socket.getSocket();
 
   const messageList = useRef(null);
@@ -113,6 +114,7 @@ const Chat = (props) => {
       });
 
       socket.on("game_over", (data) => {
+        console.log("Game over");
         props.setGameState("waiting");
         props.setArtist("");
         props.setWord("");
@@ -142,7 +144,9 @@ const Chat = (props) => {
               room: props.room,
               username: props.name,
             });
-            clearInterval(countdownInterval);
+            // clearInterval(countdownInterval);
+            console.log("clearing countdown (countdown_start): ", countdownInterval);
+            setShouldClear(true);
           } else {
             // Decrease the remaining time
             timeRemaining -= 1;
@@ -231,13 +235,20 @@ const Chat = (props) => {
             <div className="game-countdown">{props.timeRemaining} seconds</div>
           )}
           <div className="score-list">
-            {Object.entries(props.scores).map(([player, score]) => (
-              <div key={player}>
-                <p>
-                  {player}: {score}
-                </p>
-              </div>
-            ))}
+            {Object.keys(props.scores).length > 0 && (
+              <ul className="table">
+                <li className="header">
+                  <span className="player">Player</span>
+                  <span className="score">Score</span>
+                </li>
+                {Object.entries(props.scores).map(([player, score]) => (
+                  <li key={player}>
+                    <span className="player">{player}</span>
+                    <span className="score">{score}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <ul className="chat-messages" ref={messageList}>
             {messages.map((msg, index) => (

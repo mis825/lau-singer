@@ -1,0 +1,17 @@
+.Admin-container button {
+        border: none;
+        background: var(--color-chat-button);
+        color: var(--color-text);
+        font-weight: bold;
+        padding: 8px 16px;
+        /* margin: 8px; */
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: left;
+        margin-left: 1%;
+}
+
+.Admin-container button:hover {
+    background: var(--color-chat-button-hover);
+}

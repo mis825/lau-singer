@@ -32,7 +32,7 @@
 
 .chat-container {
     /* width: 90%; */
-    /* min-width: 400px; */
+    min-width: 500px;
     margin: 0 auto;
     /* margin-top: 20vh; */
     padding: 20px;
@@ -63,6 +63,25 @@
     border: 1px solid var(--color-text-secondary);
     border-radius: 8px;
 }
+
+.table {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .header {
+    font-weight: bold;
+  }
+  
+  .header .player, .header .score {
+    display: inline-block;
+    width: 50%;
+  }
+  
+  .player, .score {
+    display: inline-block;
+    width: 50%;
+  }
 
 .chat-timestamp {
     font-size: 12px;

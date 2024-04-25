@@ -7,13 +7,12 @@ import "./Admin.css";
 
 const Admin = (props) => {
   const socket = Socket.getSocket();
-  
+
   useEffect(() => {
     // Load roles
-    getRoles()
-    getWord()
-  }, [props.artist])
-  
+    getRoles();
+    getWord();
+  }, [props.artist]);
 
   const clearCanvas = () => {
     socket.emit("clearCanvas", { room: props.room, name: props.name });
@@ -41,7 +40,7 @@ const Admin = (props) => {
 
   const getWord = () => {
     if (props.name !== props.artist) return;
-    
+
     let url = new URL(`${Socket.getServerURL()}/get_word/${props.room}`);
     fetch(url, {
       method: "GET",
@@ -85,21 +84,23 @@ const Admin = (props) => {
     }
 
     // Start the game countdown
-    socket.emit("countdown_start", { room: props.room, duration: 60});
+    socket.emit("countdown_start", { room: props.room, duration: 60 });
 
     rotateArtist();
 
-    socket.emit("start_game", { room: props.room, username: props.name});
-  }
+    socket.emit("start_game", { room: props.room, username: props.name });
+  };
 
   return (
     <div className="Admin-container">
-      <button onClick={clearCanvas}>Clear Canvas</button>
-      <button onClick={deleteRoom}>Delete Room</button>
-      <button onClick={switchAdmin}>Rotate Admin</button>
-      <button onClick={getWord}>Get Word</button>
-      <button onClick={getRoles}>Get Roles</button>
-      <button onClick={startGame}>Start Game</button>
+      {props.name === props.host ? (
+        <>
+          <button className="start-button" onClick={startGame}>Start Game</button>
+          <button className="delete-button" onClick={deleteRoom}>Delete Room</button>
+        </>
+      ) : props.name === props.artist ? (
+        <button className="clear-button" onClick={clearCanvas}>Clear Canvas</button>
+      ) : null}
     </div>
   );
 };

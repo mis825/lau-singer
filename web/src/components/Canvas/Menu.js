@@ -15,14 +15,18 @@ const Menu = (props) => {
           Draw: <span className="word">{props.word}</span>
         </h2>
       ) : null}
-      {props.roles ? (
+      {/* {props.roles ? (
         <h2 className="menu-roles">
           Roles: <span className="roles">{props.roles.join(" ")}</span>
         </h2>
-      ) : null}
-      {props.artist ? (
+      ) : null} */}
+      {props.artist ? props.artist !== props.name ? (
         <h2 className="menu-artist">
-          <span className="artist">{props.artist} is drawing</span>
+          <span className="artist">Guess the word!</span>
+        </h2>
+      ) : (
+        <h2 className="menu-artist">
+          <span className="artist">You are drawing!</span>
         </h2>
       ) : null}
       {props.artist == props.name ? (
