@@ -14,13 +14,14 @@ const Chat = (props) => {
   const [gameOver, setGameOver] = useState(false);
   const [correctGuesses, setCorrectGuesses] = useState(0);
   const socket = Socket.getSocket();
+  const [countdowns, setCountdowns] = useState([]);
 
   const messageList = useRef(null);
   const scoreList = useRef(null);
 
-  useEffect(() => {
-    console.log("scoers: ", props.scores);
-  }, [props.scores]);
+  // useEffect(() => {
+  //   console.log("scoers: ", props.scores);
+  // }, [props.scores]);
 
   useEffect(() => {
     // check for scores
@@ -41,21 +42,25 @@ const Chat = (props) => {
   }, [messages]);
 
   useEffect(() => {
-    // console.log("Game state: ", props.gameState, "  shouldClear: ", shouldClear, "countdown: ", props.countdown, "gameOver: ", gameOver);
+    console.log("Game state: ", props.gameState, "  shouldClear: ", shouldClear, "countdown: ", props.countdown, "gameOver: ", gameOver);
     if (shouldClear && props.gameState === "playing" && props.countdown !== 0 && !gameOver) {
-      // console.log("Clearing countdown (correct-guess): ", props.countdown);
+      console.log("Clearing countdown (correct-guess): ", props.countdown);
       clearInterval(props.countdown);
-      props.setCountdown(0);
+      props.setCountdown(-1);
       props.setTimeRemaining(0);
       if (props.host === props.name) {
         socket.emit("countdown_start", { room: props.room, duration: 60});
         // console.log("Countdown started", props.countdown);
       }
       setShouldClear(false);
-    } else if (shouldClear && gameOver) {
-      // console.log("Clearing countdown (gameover): ", props.countdown);
+    } else if (gameOver) {
+      console.log("Clearing countdown (gameover): ", props.countdown);
       clearInterval(props.countdown);
-      props.setCountdown(0);
+      for (let i = 0; i < countdowns.length; i++) {
+        console.log("Clearing countdown (gameover): ", countdowns[i]);
+        clearInterval(countdowns[i]);
+      }
+      props.setCountdown(-1);
       props.setTimeRemaining(0);
       setShouldClear(false);
     }
@@ -109,6 +114,7 @@ const Chat = (props) => {
       });
 
       socket.on("start_game_success", (data) => {
+        console.log("Game started successfully");
         props.setGameState("playing");
         setGameOver(false);
       });
@@ -128,9 +134,13 @@ const Chat = (props) => {
 
       socket.on("countdown_start", (data) => {
 
-        if (props.countdown) {
+        console.log("countdown_start", props.countdown);
+
+        if (props.countdown !== -1 || props.countdown === 0) {
           return;
         }
+
+        console.log("setting countdown (countdown start)");
 
         
         let timeRemaining = data.duration;
@@ -152,8 +162,12 @@ const Chat = (props) => {
             timeRemaining -= 1;
           }
         }, 1000);
+
+        console.log("countdownInterval (countdown start): ", countdownInterval);
         
         props.setCountdown(countdownInterval);
+        setCountdowns([...countdowns, countdownInterval]);
+        console.log("countdowns (countdown start): ", countdowns);
         // console.log("starting a new countdown", countdownInterval);
       });
       
@@ -170,6 +184,14 @@ const Chat = (props) => {
           minute: "2-digit",
         });
       }
+
+      socket.on("reset_game", (data) => {
+        console.log("reset_game");
+        props.setGameState("waiting");
+        props.setArtist("");
+        props.setWord("");
+        setGameOver(false);
+      });
 
       socket.on("leave_room", (message) => {
         setMessages((messages) => [
@@ -189,6 +211,7 @@ const Chat = (props) => {
         socket.off("start_game_success");
         socket.off("countdown_start");
         socket.off("countdown");
+        socket.off("reset_game");
         socket.emit("leave_room", { username: props.name, room: props.room });
       };
     }

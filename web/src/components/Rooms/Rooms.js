@@ -105,20 +105,12 @@ function Rooms(props) {
         <h1>Battle Rooms</h1>
       </header>
       <div className={"inputContainer"}>
-        {/* <input
-          value={roomKey}
-          placeholder="Enter room number"
-          onChange={(ev) => setRoomKey(ev.target.value)}
-          className={"inputBox"}
-        />
-        <label className="errorLabel">{roomError}</label> */}
         <input
           className={"inputButton"}
           type="button"
           onClick={onButtonClick}
           value={"Create Room"}
         />
-
         <input
           className={"inputButton"}
           type="button"
@@ -130,7 +122,8 @@ function Rooms(props) {
         {rooms.map((room, index) => {
           return (
             <li key={index}>
-              <a className="roomLink"
+              <a
+                className="roomLink"
                 onClick={() => {
                   props.setRoom(room);
                   navigate("/game");

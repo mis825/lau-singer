@@ -84,6 +84,7 @@ const Admin = (props) => {
     }
 
     // Start the game countdown
+    socket.emit("reset_game", { room: props.room });
     socket.emit("countdown_start", { room: props.room, duration: 60 });
 
     rotateArtist();

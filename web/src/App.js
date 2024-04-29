@@ -17,7 +17,6 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          {/* <Route path="/" element={<Test />} /> */}
           <Route
             path="/"
             element={<Login setLoggedIn={setLoggedIn} setName={setName} />}

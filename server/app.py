@@ -554,7 +554,7 @@ def handle_countdown(data):
         print("All players have drawn!") # DEBUG
         emit('game_over', {'message': 'All players have drawn!'}, room=room)
         return
-    print("Starting countdown...") # DEBUG
+    print("Starting countdown (countdown)...") # DEBUG
     handle_rotate_artist({'room': room})
 
     emit('countdown', data, room=room)
@@ -562,12 +562,31 @@ def handle_countdown(data):
 @socketio.on('countdown_start')
 def handle_countdown_start(data):
     room = data['room']
+    # print("trying to start")
+    # check if everyone has drawn
+    # if len(room_to_drawn[room]) == len(active_rooms[room]) - 1:
+    #     room_to_drawn[room].clear()
+    #     print("All players have drawn!")
+    #     emit('game_over', {'message': 'All players have drawn!'}, room=room)
+    #     return
+    print("Starting countdown (countdown start)...") # DEBUG
     emit('countdown_start', data, room=room)
+
+@socketio.on('reset_game')
+def handle_reset_game(data):
+    room = data['room']
+    if room in room_correct_guesses:
+        room_correct_guesses.pop(room)
+    if room in room_words:
+        room_words.pop(room)
+    emit('clearCanvas', room=room)
+    emit('reset_game', room=room)
 
 @socketio.on('start_game')
 def handle_start_game(data):
     room_code = data['room']
     username = data['username']
+    print("Starting game...")
 
     if room_code not in active_rooms:
         emit('start_game_error', {'error': 'Room not found'})
