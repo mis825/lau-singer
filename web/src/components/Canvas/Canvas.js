@@ -10,6 +10,8 @@ const Canvas = (props) => {
   const ref = React.useRef(null);
 
   useLayoutEffect(() => {
+    if (!ref.current) return;
+    if (!context) return;
     const canvas = ref.current;
     const ctx = canvas.getContext("2d");
     canvas.width = props.width;
@@ -25,10 +27,11 @@ const Canvas = (props) => {
 
   return (
     <canvas
+      data-testid="canvas"
       ref={ref}
-      onMouseDown={context.handleMouseDown}
-      onMouseUp={context.handleMouseUp}
-      onMouseMove={context.handleMouseMove}
+      onMouseDown={context ? context.handleMouseDown : null}
+      onMouseUp={context ? context.handleMouseUp : null}
+      onMouseMove={context ? context.handleMouseMove : null}
     />
   );
 };

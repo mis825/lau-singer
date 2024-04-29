@@ -6,7 +6,6 @@ import { delay } from "../utils";
 export const CanvasContext = React.createContext();
 
 const CanvasProvider = ({ children, ...props }) => {
-  // console.log(props);
   const socket = Socket.getSocket();
   const [isDrawing, setIsDrawing] = useState(false);
   const [ctx, setCtx] = useState(null);
@@ -16,7 +15,6 @@ const CanvasProvider = ({ children, ...props }) => {
   useEffect(() => {
     if (ctx) {
       socket.on("lineDraw", (line) => {
-        // console.log("lineDraw", line);
         drawLine(line.line);
       });
       socket.on("drawingState", async (lines) => {
@@ -48,8 +46,6 @@ const CanvasProvider = ({ children, ...props }) => {
     if (props.name !== props.artist) return;
 
     if (!ctx || !isDrawing || !ev) return;
-
-    // console.log("drawing", ev.clientX, ev.clientY, ctx.canvas.offsetLeft, ctx.canvas.offsetTop);
 
     const newLine = {
       x: ev.clientX - ctx.canvas.offsetLeft,

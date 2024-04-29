@@ -514,6 +514,7 @@ def handle_send_message(data):
             emit('clearCanvas', room=room)
             if len(room_to_drawn[room]) == len(active_rooms[room]): # check if room_to_drawn is full
                 room_to_drawn[room].clear()
+                room_to_artist.pop(room)
                 emit('game_over', {'message': 'All players have drawn!'}, room=room)
                 emit('correct_guess', data, room=room)
                 return
@@ -551,6 +552,7 @@ def handle_countdown(data):
     # check if room_to_drawn is full
     if len(room_to_drawn[room]) == len(active_rooms[room]):
         room_to_drawn[room].clear()
+        room_to_artist.pop(room)
         print("All players have drawn!") # DEBUG
         emit('game_over', {'message': 'All players have drawn!'}, room=room)
         return
@@ -571,6 +573,10 @@ def handle_countdown_start(data):
     #     return
     print("Starting countdown (countdown start)...") # DEBUG
     emit('countdown_start', data, room=room)
+
+@socketio.on('room_deleted')
+def handle_delete_room(data):
+    emit('room_deleted', data, room=data['room'])
 
 @socketio.on('reset_game')
 def handle_reset_game(data):

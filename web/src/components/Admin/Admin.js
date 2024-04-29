@@ -29,6 +29,7 @@ const Admin = (props) => {
       },
     }).then((response) => {
       if (response.status === 200) {
+        socket.emit("room_deleted", { room: props.room });
         console.log("Room deleted");
       }
     });
@@ -91,19 +92,20 @@ const Admin = (props) => {
 
     socket.emit("start_game", { room: props.room, username: props.name });
   };
-
-  return (
-    <div className="Admin-container">
-      {props.name === props.host ? (
-        <>
-          <button className="start-button" onClick={startGame}>Start Game</button>
-          <button className="delete-button" onClick={deleteRoom}>Delete Room</button>
-        </>
-      ) : props.name === props.artist ? (
-        <button className="clear-button" onClick={clearCanvas}>Clear Canvas</button>
-      ) : null}
+  
+return (
+  <div className="Admin-container">
+    {props.name === props.host && (
+      <>
+        <button className="start-button" onClick={startGame}>Start Game</button>
+        <button className="delete-button" onClick={deleteRoom}>Delete Room</button>
+      </>
+    )}
+    {props.name === props.artist && (
+      <button className="clear-button" onClick={clearCanvas}>Clear Canvas</button>
+    )}
     </div>
   );
-};
+}
 
 export default Admin;

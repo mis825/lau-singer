@@ -1,11 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-// import io from "socket.io-client";
 import Socket from "../../services/Socket";
+import { useNavigate } from "react-router-dom";
 
 import "./Chat.css";
-
-// const socket = Socket.getSocket();
-
 
 const Chat = (props) => {
   const [message, setMessage] = useState("");
@@ -19,9 +16,7 @@ const Chat = (props) => {
   const messageList = useRef(null);
   const scoreList = useRef(null);
 
-  // useEffect(() => {
-  //   console.log("scoers: ", props.scores);
-  // }, [props.scores]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // check for scores
@@ -36,13 +31,13 @@ const Chat = (props) => {
         .then((response) => response.json())
         .then((data) => {
           props.setScores(data);
-          // console.log("Scores: ", data);
         });
     }
   }, [messages]);
 
   useEffect(() => {
-    console.log("Game state: ", props.gameState, "  shouldClear: ", shouldClear, "countdown: ", props.countdown, "gameOver: ", gameOver);
+    // console.log("Game state: ", props.gameState, "  shouldClear: ", shouldClear, "countdown: ", props.countdown, "gameOver: ", gameOver);
+    if (!socket) return;
     if (shouldClear && props.gameState === "playing" && props.countdown !== 0 && !gameOver) {
       console.log("Clearing countdown (correct-guess): ", props.countdown);
       clearInterval(props.countdown);
@@ -50,7 +45,6 @@ const Chat = (props) => {
       props.setTimeRemaining(0);
       if (props.host === props.name) {
         socket.emit("countdown_start", { room: props.room, duration: 60});
-        // console.log("Countdown started", props.countdown);
       }
       setShouldClear(false);
     } else if (gameOver) {
@@ -60,6 +54,7 @@ const Chat = (props) => {
         console.log("Clearing countdown (gameover): ", countdowns[i]);
         clearInterval(countdowns[i]);
       }
+      props.setArtist("");
       props.setCountdown(-1);
       props.setTimeRemaining(0);
       setShouldClear(false);
@@ -67,7 +62,7 @@ const Chat = (props) => {
   }, [shouldClear, props.gameState, gameOver, props.countdown]);
 
   useEffect(() => {
-    if (props.name && props.loggedIn) {
+    if (props.name && props.loggedIn && socket) {
       socket.emit("join_room", { username: props.name, room: props.room });
 
       socket.on("player_list", (players) => {
@@ -107,7 +102,6 @@ const Chat = (props) => {
             isGameMessage: message.isGameMessage,
           },
         ]);
-        // console.log("message", message);
         if (message.startCountdown) {
           setShouldClear(true);
         }
@@ -154,7 +148,6 @@ const Chat = (props) => {
               room: props.room,
               username: props.name,
             });
-            // clearInterval(countdownInterval);
             console.log("clearing countdown (countdown_start): ", countdownInterval);
             setShouldClear(true);
           } else {
@@ -168,7 +161,6 @@ const Chat = (props) => {
         props.setCountdown(countdownInterval);
         setCountdowns([...countdowns, countdownInterval]);
         console.log("countdowns (countdown start): ", countdowns);
-        // console.log("starting a new countdown", countdownInterval);
       });
       
       
@@ -186,11 +178,15 @@ const Chat = (props) => {
       }
 
       socket.on("reset_game", (data) => {
-        console.log("reset_game");
         props.setGameState("waiting");
         props.setArtist("");
         props.setWord("");
         setGameOver(false);
+      });
+
+      socket.on("room_deleted", (data) => {
+        console.log("Room deleted");
+        navigate("/rooms");
       });
 
       socket.on("leave_room", (message) => {
@@ -212,6 +208,7 @@ const Chat = (props) => {
         socket.off("countdown_start");
         socket.off("countdown");
         socket.off("reset_game");
+        socket.off("room_deleted");
         socket.emit("leave_room", { username: props.name, room: props.room });
       };
     }
@@ -251,14 +248,16 @@ const Chat = (props) => {
       ) : (
         <div>
           <div className="chat-header">Room {props.room}</div>
-          <div className="player-count">{props.players.length} players</div>
+          {props.players ? (
+            <div className="player-count">{props.players.length} players</div>
+          ) : null}
           {props.timeRemaining === 0 ? (
             <div className="game-countdown">Waiting for next round...</div>
           ) : (
             <div className="game-countdown">{props.timeRemaining} seconds</div>
           )}
           <div className="score-list">
-            {Object.keys(props.scores).length > 0 && (
+            {props.scores && Object.keys(props.scores).length > 0 && (
               <ul className="table">
                 <li className="header">
                   <span className="player">Player</span>
